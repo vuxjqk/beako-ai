@@ -19,7 +19,8 @@ services:
 
   backend:
     build: .
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    # Watch only backend code; polling the whole repo (frontend/node_modules) burns CPU
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir src
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
