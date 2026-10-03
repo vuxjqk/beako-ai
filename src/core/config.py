@@ -1,0 +1,27 @@
+import os
+
+JWT_SECRET = os.environ["JWT_SECRET"]
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+# Must be true in production (HTTPS); false lets cookies work on http://localhost
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+
+# OAuth client ID(s) the frontend uses for Google Sign-In; comma-separated if several
+GOOGLE_CLIENT_IDS = [c.strip() for c in os.getenv("GOOGLE_CLIENT_ID", "").split(",") if c.strip()]
+
+# Local folder for uploaded files, relative to the working dir (/app in Docker)
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+AVATAR_MAX_BYTES = int(os.getenv("AVATAR_MAX_BYTES", str(2 * 1024 * 1024)))
+
+OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
+OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
+
+SMTP_HOST = os.environ["SMTP_HOST"]
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.environ["SMTP_FROM"]
+# "starttls" (port 587), "ssl" (port 465) or "none" (local dev server)
+SMTP_SECURITY = os.getenv("SMTP_SECURITY", "starttls").lower()

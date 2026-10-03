@@ -22,6 +22,22 @@ services:
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      UPLOAD_DIR: ${UPLOAD_DIR:-uploads}
+      AVATAR_MAX_BYTES: ${AVATAR_MAX_BYTES:-2097152}
+      OTP_EXPIRE_MINUTES: ${OTP_EXPIRE_MINUTES:-10}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS:-5}
+      OTP_RESEND_COOLDOWN_SECONDS: ${OTP_RESEND_COOLDOWN_SECONDS:-60}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
       # Bind mounts from Windows/macOS hosts don't propagate inotify events
       WATCHFILES_FORCE_POLLING: "true"
     ports:
@@ -31,6 +47,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Local SMTP server that catches all outgoing mail; inbox at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     restart: unless-stopped
 
 volumes:

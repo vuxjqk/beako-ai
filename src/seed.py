@@ -2,9 +2,9 @@
 
 from datetime import datetime, timezone
 
-import bcrypt
 from sqlalchemy import select
 
+from src.core.security import hash_password
 from src.models import SessionLocal, User, UserRole
 
 DEFAULT_PASSWORD = "12345678"
@@ -14,10 +14,6 @@ SEED_USERS = [
     {"full_name": "Expert", "email": "expert@beako.com", "role": UserRole.EXPERT},
     {"full_name": "User", "email": "user@beako.com", "role": UserRole.USER},
 ]
-
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def seed() -> None:
