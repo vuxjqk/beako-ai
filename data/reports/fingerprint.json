@@ -1,0 +1,22 @@
+{
+  "volumes": {
+    "rows": 32,
+    "content_md5": "9fa569a72aec5b14085058dadeeb627b",
+    "max_xmin": 1509
+  },
+  "book_parts": {
+    "rows": 408,
+    "content_md5": "32a524d757078bb9c913590128a576d0",
+    "max_xmin": 1642
+  },
+  "book_sections": {
+    "rows": 1454,
+    "content_md5": "dfeac8527b368a50bf174fa02bb2f115",
+    "max_xmin": 1509
+  },
+  "book_paragraphs": {
+    "rows": 111916,
+    "content_md5": "8af8d2a5637d8c3edaa1990a3d6ca095",
+    "max_xmin": 1619
+  }
+}
