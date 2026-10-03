@@ -123,4 +123,6 @@ class UserResponse(CamelModel):
     avatar: str | None
     role: UserRole
     is_active: bool
+    has_password: bool
+    google_linked: bool
     created_at: datetime

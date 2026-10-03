@@ -13,23 +13,26 @@ from src.core.security import create_access_token, generate_refresh_token, hash_
 from src.models import RefreshToken, User
 
 REFRESH_TOKEN_COOKIE = "refresh_token"
-# The browser only sends the refresh token to /auth/* endpoints
-REFRESH_TOKEN_PATH = "/auth"
+# The browser only sends the refresh token to the auth endpoints
+REFRESH_TOKEN_PATH = config.REFRESH_COOKIE_PATH
 
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
     common = {"httponly": True, "secure": config.COOKIE_SECURE, "samesite": "lax"}
+    refresh_max_age = config.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
     response.set_cookie(
         ACCESS_TOKEN_COOKIE,
         access_token,
-        max_age=config.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        # The JWT itself expires after ACCESS_TOKEN_EXPIRE_MINUTES. The cookie outlives it
+        # so the frontend can tell "has a session (maybe needs refresh)" from "logged out".
+        max_age=refresh_max_age,
         path="/",
         **common,
     )
     response.set_cookie(
         REFRESH_TOKEN_COOKIE,
         refresh_token,
-        max_age=config.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        max_age=refresh_max_age,
         path=REFRESH_TOKEN_PATH,
         **common,
     )

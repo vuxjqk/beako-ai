@@ -6,6 +6,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15")
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 # Must be true in production (HTTPS); false lets cookies work on http://localhost
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+# Path the browser sends the refresh-token cookie to: "/auth" when the API is called
+# directly, "/api/auth" when the frontend proxies it under /api
+REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/auth")
 
 # OAuth client ID(s) the frontend uses for Google Sign-In; comma-separated if several
 GOOGLE_CLIENT_IDS = [c.strip() for c in os.getenv("GOOGLE_CLIENT_ID", "").split(",") if c.strip()]
