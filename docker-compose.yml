@@ -40,6 +40,15 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM}
       SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.8-flash}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MAX_OUTPUT_TOKENS: ${LLM_MAX_OUTPUT_TOKENS:-700}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.2}
+      LLM_REASONING_EFFORT: ${LLM_REASONING_EFFORT:-}
+      LLM_MAX_RETRY_WAIT_SECONDS: ${LLM_MAX_RETRY_WAIT_SECONDS:-20}
+      QA_TOP_K: ${QA_TOP_K:-6}
       # Bind mounts from Windows/macOS hosts don't propagate inotify events
       WATCHFILES_FORCE_POLLING: "true"
     ports:

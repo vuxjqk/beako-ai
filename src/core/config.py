@@ -28,3 +28,18 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.environ["SMTP_FROM"]
 # "starttls" (port 587), "ssl" (port 465) or "none" (local dev server)
 SMTP_SECURITY = os.getenv("SMTP_SECURITY", "starttls").lower()
+
+# Question answering. Any OpenAI-compatible Chat Completions API works: LLM_PROVIDER picks
+# the default endpoint (gemini | openai), LLM_BASE_URL overrides it
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").lower()
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.8-flash")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
+LLM_MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "700"))
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
+# Empty = don't send; "none"/"low" keeps thinking models from eating the output budget
+LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "")
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+# Longest provider-requested back-off (429/503) a request will sit through before failing
+LLM_MAX_RETRY_WAIT_SECONDS = float(os.getenv("LLM_MAX_RETRY_WAIT_SECONDS", "20"))
+QA_TOP_K = int(os.getenv("QA_TOP_K", "6"))
