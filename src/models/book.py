@@ -7,20 +7,25 @@ ingest can upsert on natural keys and a rerun on unchanged input writes nothing.
 import enum
 from datetime import datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     ARRAY,
     BigInteger,
+    Computed,
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
+from src.ingest.settings import EMBEDDING_DIM
 from src.models.database import Base
 
 
@@ -121,3 +126,64 @@ class BookParagraph(Base):
     source_block: Mapped[int] = mapped_column(Integer)
     # Printed page the paragraph starts on, when the epub carries page markers
     page: Mapped[str | None] = mapped_column(String(16))
+
+
+class BookChunk(Base):
+    """A retrieval chunk of story text with its embedding.
+
+    Source trace: volume -> part -> first/last section -> first/last paragraph. When a chunk
+    starts or ends inside an over-long paragraph, start_char/end_char give the offsets.
+    """
+
+    __tablename__ = "book_chunks"
+    __table_args__ = (
+        UniqueConstraint("volume_id", "ordinal"),
+        Index("ix_book_chunks_volume_seq", "volume_id", "start_seq", "end_seq"),
+        Index("ix_book_chunks_tsv", "tsv", postgresql_using="gin"),
+        Index(
+            "ix_book_chunks_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    volume_id: Mapped[int] = mapped_column(ForeignKey("volumes.id", ondelete="CASCADE"))
+    part_id: Mapped[int] = mapped_column(
+        ForeignKey("book_parts.id", ondelete="CASCADE"), index=True
+    )
+    # 1-based reading order of the chunk within the volume
+    ordinal: Mapped[int] = mapped_column(Integer)
+    start_section_id: Mapped[int] = mapped_column(
+        ForeignKey("book_sections.id", ondelete="CASCADE")
+    )
+    end_section_id: Mapped[int] = mapped_column(ForeignKey("book_sections.id", ondelete="CASCADE"))
+    start_paragraph_id: Mapped[int] = mapped_column(
+        ForeignKey("book_paragraphs.id", ondelete="CASCADE")
+    )
+    end_paragraph_id: Mapped[int] = mapped_column(
+        ForeignKey("book_paragraphs.id", ondelete="CASCADE")
+    )
+    # book_paragraphs.seq of the first and last paragraph (stable across re-ingests)
+    start_seq: Mapped[int] = mapped_column(Integer)
+    end_seq: Mapped[int] = mapped_column(Integer)
+    start_char: Mapped[int] = mapped_column(Integer)  # offset into the first paragraph
+    end_char: Mapped[int | None] = mapped_column(Integer)  # offset into the last; null = its end
+    heading: Mapped[str] = mapped_column(String(512))  # "Volume 12 — Chapter 6: ..."
+    text: Mapped[str] = mapped_column(Text)
+    token_count: Mapped[int] = mapped_column(Integer)
+    chunker_version: Mapped[str] = mapped_column(String(128))
+    # sha256 of model name + embedded input: unchanged hash = embedding still valid
+    content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIM))
+    embedding_model: Mapped[str] = mapped_column(String(128))
+    embedding_model_version: Mapped[str] = mapped_column(String(255))
+    # 'simple' config: no stemming or stop words, so proper names match exactly
+    tsv: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('simple', heading || ' ' || text)", persisted=True),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

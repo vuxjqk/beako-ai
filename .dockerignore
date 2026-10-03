@@ -6,3 +6,5 @@ __pycache__
 *.pyc
 uploads
 frontend
+data/models
+data/dump

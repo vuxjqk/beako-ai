@@ -9,6 +9,9 @@ Commands:
     load       extract every volume listed in volumes.csv and upsert it into Postgres
     verify     check the DB against volumes.csv and write data/reports/ingest_report.md
     all        inventory + load + verify
+    chunk      split story text into chunks, embed new ones, upsert into book_chunks
+    chunk-verify  check chunks/embeddings, run trial queries, write data/reports/chunk_report.md
+    search     try a query: python -m src.ingest search "Echidna's contract" [--keyword]
 """
 
 import argparse
@@ -21,6 +24,7 @@ from src.ingest.epub import read_csv, scan_folder, write_csv
 DATA_DIR = Path("data")
 CSV_PATH = DATA_DIR / "volumes.csv"
 REPORT_PATH = DATA_DIR / "reports" / "ingest_report.md"
+CHUNK_REPORT_PATH = DATA_DIR / "reports" / "chunk_report.md"
 
 
 def cmd_inventory(epub_dir: Path) -> None:
@@ -52,13 +56,47 @@ def cmd_dump(epub_dir: Path, out: Path) -> None:
             print(f"    ! {w}")
 
 
+def cmd_search(query: str | None, keyword: bool, k: int) -> None:
+    from src.ingest.search import keyword_search, vector_search
+    from src.models import engine
+
+    if not query:
+        sys.exit("search needs a query")
+    with engine.connect() as conn:
+        if keyword:
+            hits = keyword_search(conn, query, k)
+        else:
+            from src.ingest.embed import Embedder
+
+            hits = vector_search(conn, Embedder(), query, k)
+    for i, h in enumerate(hits, 1):
+        snippet = h.row.text[:300].replace("\n\n", " / ")
+        print(f"{i}. [{h.score:.3f}] {h.citation}\n   {snippet}\n")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="python -m src.ingest", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["inventory", "dump", "load", "verify", "all"])
+    ap.add_argument("command", choices=["inventory", "dump", "load", "verify", "all",
+                                        "chunk", "chunk-verify", "search"])
+    ap.add_argument("query", nargs="?", help="search: the query text")
+    ap.add_argument("--keyword", action="store_true", help="search: full-text instead of vector")
+    ap.add_argument("-k", type=int, default=5, help="search: number of results")
     ap.add_argument("--epub-dir", type=Path, default=Path(os.getenv("EPUB_DIR", "/data/epub")))
     ap.add_argument("--out", type=Path, default=DATA_DIR / "dump", help="dump: output folder")
     args = ap.parse_args()
+
+    # These work from the DB alone; no epub folder needed
+    if args.command == "chunk":
+        from src.ingest.chunk_load import load_chunks
+
+        return load_chunks(read_csv(CSV_PATH))
+    if args.command == "chunk-verify":
+        from src.ingest.chunk_verify import verify_chunks
+
+        return sys.exit(0 if verify_chunks(CHUNK_REPORT_PATH) else 1)
+    if args.command == "search":
+        return cmd_search(args.query, args.keyword, args.k)
 
     if not args.epub_dir.is_dir():
         sys.exit(f"epub folder not found: {args.epub_dir}")

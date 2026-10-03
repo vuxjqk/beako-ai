@@ -1,4 +1,5 @@
 from src.models.book import (
+    BookChunk,
     BookParagraph,
     BookPart,
     BookSection,
@@ -13,6 +14,7 @@ from src.models.refresh_token import RefreshToken
 from src.models.user import User, UserRole
 
 __all__ = [
+    "BookChunk",
     "BookParagraph",
     "BookPart",
     "BookSection",

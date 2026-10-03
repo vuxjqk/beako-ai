@@ -7,3 +7,6 @@ uploads/
 
 # Extraction dumps (python -m src.ingest dump)
 data/dump/
+
+# Downloaded embedding models (fastembed cache)
+data/models/
