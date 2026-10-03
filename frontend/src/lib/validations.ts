@@ -70,9 +70,29 @@ export const profileSchema = z.object({
   email: emailSchema,
 });
 
-export type LoginValues = z.infer<typeof loginSchema>;
+// Mirrors src/schemas/admin.py
+const managedRoleSchema = z.enum(["user", "expert"]);
+
+export const adminCreateUserSchema = z.object({
+  fullName: fullNameSchema,
+  email: emailSchema,
+  password: newPasswordSchema,
+  role: managedRoleSchema,
+});
+
+export const adminUpdateUserSchema = z.object({
+  fullName: fullNameSchema,
+  email: emailSchema,
+  // Blank = keep the current password
+  password: z.union([z.literal(""), newPasswordSchema]),
+  role: managedRoleSchema,
+});
+
+export type LoginValues =z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 export type ProfileValues = z.infer<typeof profileSchema>;
+export type AdminCreateUserValues = z.infer<typeof adminCreateUserSchema>;
+export type AdminUpdateUserValues = z.infer<typeof adminUpdateUserSchema>;
