@@ -11,6 +11,7 @@ either runs out the model must answer with what it has. Every tool call is trace
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from sqlalchemy import text
@@ -20,6 +21,9 @@ from src.core import config
 from src.ingest.search import _COLUMNS, _JOINS, Hit
 from src.services import llm, retrieval
 from src.services.retrieval import RetrievalConfig, Scope
+
+# Called with progress events while the agent works ({"type": "llm" | "tool", ...}), for streaming
+EventSink = Callable[[dict], None]
 
 log = logging.getLogger("beako.agent")
 
@@ -96,8 +100,9 @@ class AgentResult:
 
 
 class _Session:
-    def __init__(self, db: Session, embedder, cfg: RetrievalConfig):
+    def __init__(self, db: Session, embedder, cfg: RetrievalConfig, max_volume: int | None):
         self.db, self.embedder, self.cfg = db, embedder, cfg
+        self.max_volume = max_volume
         self.hits: list[Hit] = []
         self.number: dict[int, int] = {}  # chunk id -> passage number
         self.tool_ms = 0.0
@@ -108,6 +113,17 @@ class _Session:
             return "short_story_collection", int(args["short_story_collection"])
         if args.get("volume"):
             return "main", int(args["volume"])
+        return None
+
+    def _hidden(self, kind: str, number: int) -> str | None:
+        """Why this volume is off limits under the reader's spoiler limit, or None."""
+        if self.max_volume is None:
+            return None
+        if kind != "main":
+            return (f"Short story collections are hidden: the reader has only read up to Volume "
+                    f"{self.max_volume}.")
+        if number > self.max_volume:
+            return f"Volume {number} is hidden: the reader has only read up to Volume {self.max_volume}."
         return None
 
     def _show(self, hits: list[Hit]) -> str:
@@ -145,7 +161,11 @@ class _Session:
         elif volumes:
             vols = tuple(sorted({int(v) for v in volumes}))
             scope = Scope("main", vols, int(chapter) if chapter and len(vols) == 1 else None)
-        hits = retrieval.retrieve(self.db.connection(), self.embedder, query, SEARCH_K, self.cfg, scope)
+        hits = retrieval.retrieve(self.db.connection(), self.embedder, query, SEARCH_K, self.cfg, scope,
+                                  self.max_volume)
+        if not hits and scope is not None and self.max_volume is not None:
+            return (f"No passages found. The reader has only read up to Volume {self.max_volume}; "
+                    "later volumes and the short story collections are hidden.")
         return self._show(hits)
 
     def read_around(self, passage: int, direction: str = "both") -> str:
@@ -163,6 +183,8 @@ class _Session:
         vol = self._volume({"volume": volume, "short_story_collection": short_story_collection})
         if vol is None:
             return "Give a volume or a short_story_collection."
+        if hidden := self._hidden(*vol):
+            return hidden
         parts = self._chapter_parts(*vol)
         if not parts:
             return "No such volume."
@@ -174,6 +196,8 @@ class _Session:
         vol = self._volume({"volume": volume, "short_story_collection": short_story_collection})
         if vol is None:
             return "Give a volume or a short_story_collection."
+        if hidden := self._hidden(*vol):
+            return hidden
         want = str(chapter).strip().lower()
         parts = self._chapter_parts(*vol)
         match = [p for p in parts if want in {(p.label or "").lower(), (p.title or "").lower(),
@@ -214,11 +238,20 @@ def _add_usage(total: dict, usage: dict) -> None:
 ANSWER_NOW = "Stop searching. Write your final answer now from the passages above, following the answer rules."
 
 
-def run(db: Session, embedder, question: str, cfg: RetrievalConfig) -> AgentResult:
+def run(db: Session, embedder, question: str, cfg: RetrievalConfig, max_volume: int | None = None,
+        on_event: EventSink | None = None) -> AgentResult:
+    """max_volume: the reader's spoiler limit. The tools enforce it (search, list_chapters and
+    read_chapter cannot reach later volumes); the prompt only explains it to the model."""
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
-    s = _Session(db, embedder, cfg)
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": question}]
+    s = _Session(db, embedder, cfg, max_volume)
+    emit = on_event or (lambda event: None)
+    system = SYSTEM_PROMPT
+    if max_volume is not None:
+        system += (f"\n\nSpoiler limit: the reader has only read up to Volume {max_volume}. Your tools cannot "
+                   f"show later volumes or the short story collections. Never mention events after Volume "
+                   f"{max_volume}; if the answer lies beyond it, say it has not happened yet in what they have read.")
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": question}]
     usage: dict = {}
     trace: list[dict] = []
     timing = {"llm": 0.0}
@@ -226,6 +259,7 @@ def run(db: Session, embedder, question: str, cfg: RetrievalConfig) -> AgentResu
 
     def step(n: int, tool_choice: str, forced: bool = False) -> llm.ToolTurn:
         nonlocal model
+        emit({"type": "llm", "step": n, "final": tool_choice == "none"})
         t0 = time.perf_counter()
         turn = llm.chat_tools(messages, TOOLS, tool_choice=tool_choice)
         timing["llm"] += (time.perf_counter() - t0) * 1000
@@ -250,6 +284,7 @@ def run(db: Session, embedder, question: str, cfg: RetrievalConfig) -> AgentResu
             result, args = s.call(name, tc.get("function", {}).get("arguments", "{}"))
             new = list(range(before + 1, len(s.hits) + 1))
             trace.append({"step": n, "tool": name, "args": args, "new_passages": [new[0], new[-1]] if new else []})
+            emit({"type": "tool", "step": n, "tool": name, "args": args, "new_passages": len(new)})
             log.info("agent step %d %s(%s) -> %d new passages", n, name, json.dumps(args, ensure_ascii=False), len(new))
             messages.append({"role": "tool", "tool_call_id": tc.get("id", name), "content": result})
         if (turn.usage.get("prompt_tokens") or 0) > config.AGENT_MAX_CONTEXT_TOKENS:

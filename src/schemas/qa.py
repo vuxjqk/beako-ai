@@ -1,6 +1,13 @@
+import uuid
+from datetime import datetime
+from typing import Literal
+
 from pydantic import Field
 
 from src.schemas.auth import CamelModel
+
+# Main volumes in the corpus; a reader's spoiler limit is one of these
+MAX_VOLUME = 28
 
 
 class AskRequest(CamelModel):
@@ -8,6 +15,10 @@ class AskRequest(CamelModel):
     # the simple path is English only
     question: str = Field(min_length=3, max_length=1000)
     top_k: int | None = Field(default=None, ge=1, le=10)
+    # Spoiler limit: "I have read up to Volume N". Only main volumes <= N are searched
+    max_volume: int | None = Field(default=None, ge=1, le=MAX_VOLUME)
+    # Continue an existing conversation (messages are stored there); omitted = start a new one
+    conversation_id: uuid.UUID | None = None
 
 
 class Source(CamelModel):
@@ -15,6 +26,8 @@ class Source(CamelModel):
     cited: bool
     score: float
     volume: str
+    volume_kind: Literal["main", "short_story_collection"]
+    volume_number: int
     chapter: str
     sections: list[int]
     pages: list[str]
@@ -36,3 +49,28 @@ class AskResponse(CamelModel):
     mode: str  # simple | agent | simple+agent
     route_reason: str | None = None
     trace: list[dict] = []  # agent tool calls and per-step token use
+    max_volume: int | None = None
+    conversation_id: uuid.UUID | None = None
+    message_id: uuid.UUID | None = None  # the stored answer; send feedback to it
+
+
+class FeedbackRequest(CamelModel):
+    # 1 = the answer is right, -1 = wrong, null = take back the rating
+    rating: Literal[1, -1] | None
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+class FeedbackResponse(CamelModel):
+    message_id: uuid.UUID
+    rating: int | None
+    comment: str | None
+    feedback_at: datetime | None
+
+
+class ChunkResponse(CamelModel):
+    chunk_id: int
+    citation: str
+    volume: str
+    chapter: str
+    paragraphs: list[int]
+    text: str

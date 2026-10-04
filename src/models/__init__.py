@@ -8,6 +8,7 @@ from src.models.book import (
     Volume,
     VolumeKind,
 )
+from src.models.conversation import Conversation, Message, MessageRole
 from src.models.database import Base, SessionLocal, engine, get_db
 from src.models.otp_code import OtpCode, OtpPurpose
 from src.models.refresh_token import RefreshToken
@@ -22,6 +23,9 @@ __all__ = [
     "PartKind",
     "Volume",
     "VolumeKind",
+    "Conversation",
+    "Message",
+    "MessageRole",
     "Base",
     "SessionLocal",
     "engine",

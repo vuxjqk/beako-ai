@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 
 from src.core import config
 from src.ingest.search import Hit
-from src.services import llm, retrieval
+from src.services import agent, llm, retrieval
+from src.services.agent import EventSink
 from src.services.retrieval import RetrievalConfig
 
 NOT_FOUND = "Not found in the provided passages."
@@ -98,9 +99,11 @@ def cited_numbers(text: str, limit: int) -> set[int]:
     return {n for n in nums if 1 <= n <= limit}
 
 
-def retrieve(db: Session, question: str, k: int, cfg: RetrievalConfig | None = None) -> list[Hit]:
+def retrieve(db: Session, question: str, k: int, cfg: RetrievalConfig | None = None,
+             max_volume: int | None = None) -> list[Hit]:
     """The retrieval step of answer_question, also called by the evaluation (src.eval)."""
-    return retrieval.retrieve(db.connection(), get_embedder(), question, k, cfg or retrieval.default_config())
+    return retrieval.retrieve(db.connection(), get_embedder(), question, k, cfg or retrieval.default_config(),
+                              max_volume=max_volume)
 
 
 def _sources(hits: list[Hit], cited: set[int]) -> list[dict]:
@@ -112,6 +115,8 @@ def _sources(hits: list[Hit], cited: set[int]) -> list[dict]:
             "cited": i in cited,
             "score": round(float(h.score), 4),
             "volume": f"{'Volume' if r.volume_kind == 'main' else 'Short Story Collection'} {r.volume_number}",
+            "volume_kind": r.volume_kind,
+            "volume_number": r.volume_number,
             "chapter": ": ".join(x for x in (r.label, r.title) if x),
             "sections": [n for n in dict.fromkeys((r.start_section, r.end_section)) if n is not None],
             "pages": [p for p in dict.fromkeys((r.start_page, r.end_page)) if p],
@@ -123,11 +128,17 @@ def _sources(hits: list[Hit], cited: set[int]) -> list[dict]:
     return sources
 
 
-def _simple(db: Session, question: str, k: int, cfg: RetrievalConfig | None) -> Answer:
+def _simple(db: Session, question: str, k: int, cfg: RetrievalConfig | None, max_volume: int | None,
+            emit: EventSink) -> Answer:
+    emit({"type": "tool", "step": 1, "tool": "search", "args": {"query": question}})
     t0 = time.perf_counter()
-    hits = retrieve(db, question, k, cfg)
+    hits = retrieve(db, question, k, cfg, max_volume)
     t1 = time.perf_counter()
-    completion = llm.chat(SYSTEM_PROMPT, build_prompt(question, hits))
+    emit({"type": "llm", "step": 1, "final": True})
+    system = SYSTEM_PROMPT
+    if max_volume is not None:
+        system += f"\n6. The reader has only read up to Volume {max_volume}; never mention later events."
+    completion = llm.chat(system, build_prompt(question, hits))
     t2 = time.perf_counter()
     text = completion.text
     found = bool(text) and not text.startswith(NOT_FOUND.rstrip("."))
@@ -142,10 +153,9 @@ def _simple(db: Session, question: str, k: int, cfg: RetrievalConfig | None) -> 
     )
 
 
-def _agent(db: Session, question: str, cfg: RetrievalConfig | None) -> Answer:
-    from src.services import agent
-
-    r = agent.run(db, get_embedder(), question, cfg or retrieval.default_config())
+def _agent(db: Session, question: str, cfg: RetrievalConfig | None, max_volume: int | None,
+           emit: EventSink) -> Answer:
+    r = agent.run(db, get_embedder(), question, cfg or retrieval.default_config(), max_volume, emit)
     return Answer(
         question=question,
         answer=r.answer,
@@ -160,22 +170,28 @@ def _agent(db: Session, question: str, cfg: RetrievalConfig | None) -> Answer:
 
 
 def answer_question(db: Session, question: str, top_k: int | None = None,
-                    cfg: RetrievalConfig | None = None, mode: str | None = None) -> Answer:
+                    cfg: RetrievalConfig | None = None, mode: str | None = None,
+                    max_volume: int | None = None, on_event: EventSink | None = None) -> Answer:
     """mode: simple (one search + one LLM call), agent (tool-using loop), or auto (route by
-    question; with QA_ESCALATE a simple-path "not found" is retried by the agent)."""
+    question; with QA_ESCALATE a simple-path "not found" is retried by the agent).
+    max_volume: the reader's spoiler limit, enforced in retrieval and in the agent's tools.
+    on_event: receives progress events ({"type": "route" | "tool" | "llm", ...}) for streaming."""
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
+    emit = on_event or (lambda event: None)
     requested = mode or config.QA_MODE
     if requested not in ("simple", "agent", "auto"):
         raise ValueError(f"unknown QA mode {requested!r}")
     path, reason = route(question) if requested == "auto" else (requested, None)
+    emit({"type": "route", "mode": path, "reason": reason})
     if path == "agent":
-        a = _agent(db, question, cfg)
+        a = _agent(db, question, cfg, max_volume, emit)
         a.route_reason = reason
         return a
-    a = _simple(db, question, top_k or config.QA_TOP_K, cfg)
+    a = _simple(db, question, top_k or config.QA_TOP_K, cfg, max_volume, emit)
     if requested == "auto" and config.QA_ESCALATE and not a.found:
-        b = _agent(db, question, cfg)
+        emit({"type": "route", "mode": "agent", "reason": "simple path found nothing"})
+        b = _agent(db, question, cfg, max_volume, emit)
         b.mode, b.route_reason = "simple+agent", "simple path found nothing"
         b.usage = {k: a.usage.get(k, 0) + b.usage.get(k, 0) for k in set(a.usage) | set(b.usage)}
         b.timings_ms = {k: a.timings_ms.get(k, 0) + b.timings_ms.get(k, 0) for k in a.timings_ms}

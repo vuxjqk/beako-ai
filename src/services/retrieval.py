@@ -286,23 +286,52 @@ def _rankings(conn: Connection, embedder, question: str, n: int, scope: Scope | 
     return rankings, cosine
 
 
+def reader_scope(max_volume: int | None) -> Scope | None:
+    """Spoiler limit: only main volumes 1..max_volume. Short story collections are left out,
+    since their place in the main timeline is not recorded."""
+    return Scope("main", tuple(range(1, max_volume + 1))) if max_volume else None
+
+
+def intersect(a: Scope, b: Scope) -> Scope | None:
+    """Volumes in both scopes (None when nothing is left); keeps a's chapter for a single volume."""
+    if a.kind != b.kind:
+        return None
+    volumes = tuple(sorted(set(a.volumes) & set(b.volumes)))
+    if not volumes:
+        return None
+    return Scope(a.kind, volumes, a.chapter if len(volumes) == 1 else None)
+
+
 def retrieve(conn: Connection, embedder, question: str, k: int, cfg: RetrievalConfig,
-             scope: Scope | None = None) -> list[Hit]:
-    """Top k chunks for the question. An explicit scope (from the agent's tool call) is a hard
-    filter; otherwise cfg.scope decides what to do with volumes named in the question."""
-    if scope is not None:
-        cfg = replace(cfg, scope="filter")
+             scope: Scope | None = None, max_volume: int | None = None) -> list[Hit]:
+    """Top k chunks for the question.
+
+    scope: an explicit filter (the agent's tool call); otherwise cfg.scope decides what to do
+    with volumes named in the question. max_volume: the reader's spoiler limit, enforced here
+    so that no caller (prompt instructions included) can reach later volumes."""
+    cap = reader_scope(max_volume)
+    explicit = scope is not None
+    if explicit:
+        mode = "filter"
     elif cfg.scope not in ("off", "filter", "boost"):
         raise ValueError(f"unknown scope mode {cfg.scope!r}")
-    elif cfg.scope != "off":
-        scope = parse_scope(question)
+    else:
+        mode = cfg.scope
+        scope = parse_scope(question) if mode != "off" else None
+    if cap is not None and scope is not None:
+        scope = intersect(scope, cap)
+        if scope is None and explicit:
+            return []  # everything asked for is beyond what the reader has read
     n = max(cfg.candidates, k)
-    rankings, cosine = _rankings(conn, embedder, question, n, scope if cfg.scope == "filter" else None, cfg)
-    if scope is not None and cfg.scope == "boost":
+    base = scope if mode == "filter" and scope is not None else cap
+    rankings, cosine = _rankings(conn, embedder, question, n, base, cfg)
+    if scope is not None and mode == "boost":
         rankings += _rankings(conn, embedder, question, n, scope, cfg)[0]
-    if scope is not None and cfg.scope == "filter" and not any(rankings):
-        # The named volume/chapter does not exist (or holds nothing): search everything
-        return retrieve(conn, embedder, question, k, replace(cfg, scope="off"), None)
+    if scope is not None and mode == "filter" and not any(rankings):
+        if explicit:
+            return []
+        # The named volume/chapter does not exist (or holds nothing): search everything allowed
+        return retrieve(conn, embedder, question, k, replace(cfg, scope="off"), None, max_volume)
     ids = rankings[0] if len(rankings) == 1 else rrf(rankings, cfg.rrf_k)
     ids = ids[:n]
     # Cosine similarity for plain vector search; otherwise rank-based (raw scores differ in scale)

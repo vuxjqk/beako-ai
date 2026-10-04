@@ -10,6 +10,7 @@
                                 simulate an auto-mode routing policy from a simple run and an
                                 agent run (no LLM calls); saved as a run marked "simulated"
     report                      rebuild data/reports/eval_report.md from all saved runs
+    feedback                    export users' right/wrong ratings to data/eval/feedback.jsonl
 
 retrieval and generation also rebuild the report when they finish.
 """
@@ -18,7 +19,7 @@ import argparse
 from pathlib import Path
 
 from src.core import config
-from src.eval import generation, golden, report, retrieval
+from src.eval import feedback, generation, golden, report, retrieval
 from src.models import SessionLocal
 from src.services.retrieval import default_config
 
@@ -51,6 +52,7 @@ def main() -> None:
     p.add_argument("--policy", required=True, choices=generation.POLICIES)
     p.add_argument("--label")
     sub.add_parser("report")
+    sub.add_parser("feedback")
     args = ap.parse_args()
 
     if args.cmd == "combine":
@@ -66,6 +68,9 @@ def main() -> None:
         print(f"report: {report.build()}")
         return
     with SessionLocal() as db:
+        if args.cmd == "feedback":
+            print(feedback.export(db))
+            return
         if args.cmd == "check":
             questions, _ = golden.load()
             problems = golden.check(db, questions)

@@ -10,3 +10,6 @@ data/dump/
 
 # Downloaded embedding models (fastembed cache)
 data/models/
+
+# Users' rated answers (python -m src.eval feedback): personal data, not committed
+data/eval/feedback.jsonl

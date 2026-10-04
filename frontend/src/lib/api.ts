@@ -109,3 +109,35 @@ export async function api<T = void>(path: string, options: RequestOptions = {}):
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+/**
+ * Like `api`, but returns the raw response once it starts (status 2xx), so the caller can
+ * read a streamed body (server-sent events). Same session handling: one refresh on 401.
+ */
+export async function apiStream(path: string, json: unknown, signal?: AbortSignal): Promise<Response> {
+  const open = async () => {
+    try {
+      return await fetch(`/api${path}`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+        body: JSON.stringify(json),
+        signal,
+      });
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      throw new NetworkError();
+    }
+  };
+
+  let res = await open();
+  if (res.status === 401) {
+    if (await refreshSession()) res = await open();
+    if (res.status === 401) {
+      redirectToLogin();
+      throw new SessionExpiredError();
+    }
+  }
+  if (!res.ok) throw await toApiError(res);
+  return res;
+}
