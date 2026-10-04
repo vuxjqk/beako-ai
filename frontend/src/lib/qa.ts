@@ -91,7 +91,8 @@ export async function askStream(
       if (event === "start") handlers.onStart?.(payload);
       else if (event === "status") handlers.onStatus(payload as StatusEvent);
       else if (event === "answer") return payload as Answer;
-      else if (event === "error") throw new ApiError(payload.status ?? 500, payload.detail ?? "Error");
+      else if (event === "error")
+        throw new ApiError(payload.status ?? 500, payload.detail ?? "Error", payload.retryAfter ?? undefined, payload.code);
     }
   }
   throw new ApiError(502, "The answer stream ended unexpectedly");

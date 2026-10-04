@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from src.api import admin_users, auth, me, qa
+from src.api import admin_usage, admin_users, auth, me, qa
 from src.core import config
 from src.models import get_db
 from src.services.storage import UPLOAD_URL_PREFIX
@@ -14,6 +14,7 @@ app = FastAPI(title="Beako AI")
 app.include_router(auth.router)
 app.include_router(me.router)
 app.include_router(admin_users.router)
+app.include_router(admin_usage.router)
 app.include_router(qa.router)
 
 Path(config.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)

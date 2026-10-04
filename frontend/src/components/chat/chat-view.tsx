@@ -9,6 +9,7 @@ import { describe } from "@/components/chat/progress-steps";
 import { LogoMark, SLOGAN } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ApiError } from "@/lib/api";
 import { errorMessage } from "@/lib/errors";
 import { askStream, MAX_VOLUME } from "@/lib/qa";
 
@@ -27,6 +28,47 @@ function readSpoilerLimit(): number | null {
   } catch {
     return null;
   }
+}
+
+/** "sau 45 giây" / "sau 3 phút" / "vào ngày mai" for a Retry-After in seconds. */
+function waitText(seconds: number | undefined): string {
+  if (!seconds) return "sau ít phút";
+  if (seconds < 60) return `sau ${seconds} giây`;
+  if (seconds < 3600) return `sau ${Math.ceil(seconds / 60)} phút`;
+  return "vào ngày mai";
+}
+
+/** Vietnamese message for a failed question, by the backend's reason code (see POST /qa). */
+function askErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.code) {
+      case "input_rejected":
+        return "Câu hỏi này trông như đang cố thay đổi chỉ dẫn của trợ lý nên không được xử lý. Hãy hỏi về nội dung truyện.";
+      case "busy":
+        return "Câu hỏi trước của bạn vẫn đang được trả lời. Vui lòng đợi nó xong rồi hỏi tiếp.";
+      case "rate_limited":
+        return `Bạn hỏi hơi nhanh. Vui lòng thử lại ${waitText(error.retryAfter)}.`;
+      case "user_quota":
+        return "Bạn đã dùng hết lượt hỏi của hôm nay. Hạn mức sẽ được làm mới vào ngày mai.";
+      case "budget":
+        return "Hệ thống đã đạt giới hạn sử dụng của hôm nay. Vui lòng quay lại vào ngày mai.";
+      case "llm_quota":
+        return "Dịch vụ AI đã hết hạn mức. Vui lòng thử lại sau.";
+      case "llm_rate_limited":
+      case "llm_unavailable":
+        return "Dịch vụ AI đang quá tải hoặc tạm thời gián đoạn. Vui lòng thử lại sau ít phút.";
+      case "llm_timeout":
+        return "Dịch vụ AI phản hồi quá lâu. Vui lòng thử lại.";
+      case "llm_empty":
+        return "Dịch vụ AI trả về câu trả lời rỗng. Vui lòng hỏi lại.";
+      case "llm_not_configured":
+        return "Tính năng hỏi đáp chưa được cấu hình trên máy chủ.";
+    }
+  }
+  return errorMessage(error, {
+    404: "Cuộc trò chuyện không còn tồn tại. Hãy bắt đầu cuộc trò chuyện mới.",
+    502: "Dịch vụ AI không trả lời được. Vui lòng thử lại sau ít phút.",
+  });
 }
 
 function saveSpoilerLimit(value: number | null) {
@@ -101,11 +143,7 @@ export function ChatView() {
         ...t,
         status: "error",
         seconds: (Date.now() - startedAt) / 1000,
-        error: errorMessage(error, {
-          502: "Dịch vụ AI đang quá tải hoặc đã hết hạn mức. Vui lòng thử lại sau ít phút.",
-          503: "Tính năng hỏi đáp chưa được cấu hình trên máy chủ.",
-          404: "Cuộc trò chuyện không còn tồn tại. Hãy bắt đầu cuộc trò chuyện mới.",
-        }),
+        error: askErrorMessage(error),
       }));
     } finally {
       textareaRef.current?.focus();

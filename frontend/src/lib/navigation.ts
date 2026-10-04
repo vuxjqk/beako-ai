@@ -1,4 +1,4 @@
-import { Library, MessageSquare, Users, type LucideIcon } from "lucide-react";
+import { ChartColumn, Library, MessageSquare, Users, type LucideIcon } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
 
@@ -23,7 +23,10 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: "Quản trị",
-    items: [{ title: "Người dùng", href: "/admin/users", icon: Users, roles: ["admin"] }],
+    items: [
+      { title: "Người dùng", href: "/admin/users", icon: Users, roles: ["admin"] },
+      { title: "Chi phí & chất lượng", href: "/admin/usage", icon: ChartColumn, roles: ["admin"] },
+    ],
   },
 ];
 

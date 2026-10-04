@@ -55,6 +55,17 @@ services:
       RETRIEVAL_RERANK: ${RETRIEVAL_RERANK:-}
       QA_MODE: ${QA_MODE:-}
       QA_ESCALATE: ${QA_ESCALATE:-}
+      # Guardrails and cost tracking (see src/core/config.py)
+      QA_USER_PER_MINUTE: ${QA_USER_PER_MINUTE:-5}
+      QA_USER_PER_DAY: ${QA_USER_PER_DAY:-100}
+      QA_USER_DAILY_TOKENS: ${QA_USER_DAILY_TOKENS:-300000}
+      QA_USER_MAX_CONCURRENT: ${QA_USER_MAX_CONCURRENT:-1}
+      QA_DAILY_BUDGET_USD: ${QA_DAILY_BUDGET_USD:-5}
+      QA_DEGRADE_AT: ${QA_DEGRADE_AT:-0.8}
+      QA_TIMEZONE: ${QA_TIMEZONE:-UTC}
+      LLM_PRICE_INPUT_PER_MTOK: ${LLM_PRICE_INPUT_PER_MTOK:-0.5}
+      LLM_PRICE_OUTPUT_PER_MTOK: ${LLM_PRICE_OUTPUT_PER_MTOK:-3}
+      LLM_MAX_TOTAL_RETRY_SECONDS: ${LLM_MAX_TOTAL_RETRY_SECONDS:-45}
       # Bind mounts from Windows/macOS hosts don't propagate inotify events
       WATCHFILES_FORCE_POLLING: "true"
     ports:

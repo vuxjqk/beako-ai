@@ -59,3 +59,20 @@ QA_ESCALATE = (os.getenv("QA_ESCALATE") or "false").lower() == "true"
 # Agent limits: model calls per question, and prompt size after which it must answer
 AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "6"))
 AGENT_MAX_CONTEXT_TOKENS = int(os.getenv("AGENT_MAX_CONTEXT_TOKENS", "40000"))
+
+# Guardrails (src/services/guard.py). Per-user limits; admins are exempt from these, not from the budget
+QA_USER_PER_MINUTE = int(os.getenv("QA_USER_PER_MINUTE", "5"))
+QA_USER_PER_DAY = int(os.getenv("QA_USER_PER_DAY", "100"))
+QA_USER_DAILY_TOKENS = int(os.getenv("QA_USER_DAILY_TOKENS", "300000"))
+QA_USER_MAX_CONCURRENT = int(os.getenv("QA_USER_MAX_CONCURRENT", "1"))
+# System-wide spend per day: past QA_DEGRADE_AT x budget only the cheap simple path runs, past
+# the budget questions are refused until the next day. 0 = no cap
+QA_DAILY_BUDGET_USD = float(os.getenv("QA_DAILY_BUDGET_USD", "5"))
+QA_DEGRADE_AT = float(os.getenv("QA_DEGRADE_AT", "0.8"))
+# Days for limits and reports start at midnight in this time zone (a PostgreSQL zone name)
+QA_TIMEZONE = os.getenv("QA_TIMEZONE", "UTC")
+# Price of LLM_MODEL in USD per million tokens, for cost estimates; check your provider's price page
+LLM_PRICE_INPUT_PER_MTOK = float(os.getenv("LLM_PRICE_INPUT_PER_MTOK", "0.5"))
+LLM_PRICE_OUTPUT_PER_MTOK = float(os.getenv("LLM_PRICE_OUTPUT_PER_MTOK", "3"))
+# Total back-off one question may spend waiting on provider retries, across all its LLM calls
+LLM_MAX_TOTAL_RETRY_SECONDS = float(os.getenv("LLM_MAX_TOTAL_RETRY_SECONDS", "45"))

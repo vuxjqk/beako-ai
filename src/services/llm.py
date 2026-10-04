@@ -9,6 +9,9 @@ import re
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 
 from src.core import config
@@ -18,15 +21,74 @@ DEFAULT_BASE_URLS = {
     "openai": "https://api.openai.com/v1/",
 }
 RETRIES = 3
-RETRY_STATUSES = {429, 500, 503}
+RETRY_STATUSES = {429, 500, 502, 503, 504}
+# An empty reply (no text, no tool calls) is asked again this many times before giving up
+EMPTY_RETRIES = 1
+# 429 bodies that mean the account's quota is spent, not a short burst limit: retrying won't help
+QUOTA_RE = re.compile(r"insufficient_quota|billing|PerDay|per day|exceeded your current quota", re.I)
 
 
 class LLMError(Exception):
-    pass
+    """kind says what went wrong, for the user's message and the request log:
+    quota | rate_limited | unavailable | timeout | empty | rejected | not_configured | error"""
+
+    def __init__(self, message: str, kind: str = "error"):
+        super().__init__(message)
+        self.kind = kind
 
 
 class LLMNotConfigured(LLMError):
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, "not_configured")
+
+
+@dataclass
+class Meter:
+    """Every LLM call made while it is active (see metered()), including calls of a question
+    that failed halfway, so the request log and the budgets see all the spending."""
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    retry_wait_s: float = 0.0
+    model: str | None = None
+
+    def add(self, data: dict, model: str) -> None:
+        u = data.get("usage") or {}
+        prompt = u.get("prompt_tokens") or 0
+        # Thinking models bill reasoning as output; some APIs leave it out of completion_tokens
+        output = max(u.get("completion_tokens") or 0, (u.get("total_tokens") or 0) - prompt)
+        self.calls += 1
+        self.prompt_tokens += prompt
+        self.completion_tokens += output
+        self.model = data.get("model") or model
+
+
+_meter: ContextVar[Meter | None] = ContextVar("llm_meter", default=None)
+
+
+@contextmanager
+def metered() -> Iterator[Meter]:
+    """Count the LLM calls made in this block (in this thread or task)."""
+    m = Meter()
+    token = _meter.set(m)
+    try:
+        yield m
+    finally:
+        _meter.reset(token)
+
+
+def _http_error(code: int, body: str) -> LLMError:
+    if code == 429:
+        kind = "quota" if QUOTA_RE.search(body) else "rate_limited"
+    elif code in (500, 502, 503):
+        kind = "unavailable"
+    elif code == 504:
+        kind = "timeout"
+    elif code in (401, 403):
+        kind = "not_configured"  # bad or revoked key
+    else:
+        kind = "rejected"
+    return LLMError(f"LLM API returned {code}: {body[:500]}", kind)
 
 
 @dataclass
@@ -76,22 +138,36 @@ def _post(body: dict) -> dict:
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {config.LLM_API_KEY}"},
         method="POST",
     )
+    meter = _meter.get()
     for attempt in range(RETRIES + 1):
         try:
             with urllib.request.urlopen(req, timeout=config.LLM_TIMEOUT_SECONDS) as resp:
-                return json.load(resp)
+                data = json.load(resp)
+            if meter is not None:
+                meter.add(data, body["model"])
+            return data
         except urllib.error.HTTPError as e:
             raw = e.read().decode(errors="replace")
+            err = _http_error(e.code, raw)
             # Rate limits and "model overloaded" are transient on shared free tiers; wait as
             # long as the provider asks, unless that is longer than a request should hang
             wait = _retry_after(e, raw) or 2 ** attempt * 2
-            if e.code in RETRY_STATUSES and attempt < RETRIES and wait <= config.LLM_MAX_RETRY_WAIT_SECONDS:
+            waited = meter.retry_wait_s if meter is not None else 0.0
+            if (e.code in RETRY_STATUSES and err.kind != "quota" and attempt < RETRIES
+                    and wait <= config.LLM_MAX_RETRY_WAIT_SECONDS
+                    and waited + wait <= config.LLM_MAX_TOTAL_RETRY_SECONDS):
+                if meter is not None:
+                    meter.retry_wait_s += wait
                 time.sleep(wait)
                 continue
-            raise LLMError(f"LLM API returned {e.code}: {raw[:500]}") from e
-        except (urllib.error.URLError, TimeoutError) as e:
-            raise LLMError(f"LLM API unreachable: {e}") from e
-    raise LLMError("LLM API retries exhausted")
+            raise err from e
+        except TimeoutError as e:
+            raise LLMError(f"LLM API timed out after {config.LLM_TIMEOUT_SECONDS:g}s", "timeout") from e
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, TimeoutError):
+                raise LLMError(f"LLM API timed out after {config.LLM_TIMEOUT_SECONDS:g}s", "timeout") from e
+            raise LLMError(f"LLM API unreachable: {e.reason}", "unavailable") from e
+    raise LLMError("LLM API retries exhausted", "unavailable")
 
 
 def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | None = None,
@@ -103,11 +179,14 @@ def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | 
         "max_tokens": max_tokens or config.LLM_MAX_OUTPUT_TOKENS,
         "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
     }
-    data = _post(body)
-    choice = (data.get("choices") or [{}])[0]
-    text = (choice.get("message") or {}).get("content") or ""
-    return Completion(text.strip(), data.get("model", body["model"]),
-                      choice.get("finish_reason"), data.get("usage") or {})
+    for attempt in range(EMPTY_RETRIES + 1):
+        data = _post(body)
+        choice = (data.get("choices") or [{}])[0]
+        text = ((choice.get("message") or {}).get("content") or "").strip()
+        if text:
+            return Completion(text, data.get("model", body["model"]), choice.get("finish_reason"),
+                              data.get("usage") or {})
+    raise LLMError(f"LLM API returned an empty reply (finish_reason={choice.get('finish_reason')})", "empty")
 
 
 def chat_tools(messages: list[dict], tools: list[dict], *, tool_choice: str = "auto",
@@ -123,9 +202,14 @@ def chat_tools(messages: list[dict], tools: list[dict], *, tool_choice: str = "a
     if tools:
         body["tools"] = tools
         body["tool_choice"] = tool_choice
-    data = _post(body)
-    choice = (data.get("choices") or [{}])[0]
-    message = choice.get("message") or {"role": "assistant", "content": ""}
+    for attempt in range(EMPTY_RETRIES + 1):
+        data = _post(body)
+        choice = (data.get("choices") or [{}])[0]
+        message = choice.get("message") or {"role": "assistant", "content": ""}
+        if message.get("tool_calls") or (message.get("content") or "").strip():
+            break
+    else:
+        raise LLMError(f"LLM API returned an empty reply (finish_reason={choice.get('finish_reason')})", "empty")
     message.setdefault("role", "assistant")
     return ToolTurn(message, message.get("tool_calls") or [], (message.get("content") or "").strip(),
                     data.get("model", body["model"]), choice.get("finish_reason"), data.get("usage") or {})

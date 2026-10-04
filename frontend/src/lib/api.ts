@@ -11,6 +11,8 @@ export class ApiError extends Error {
     readonly status: number,
     readonly detail: string,
     readonly retryAfter?: number,
+    /** Machine-readable reason when the backend sends one (detail: {code, message}) */
+    readonly code?: string,
   ) {
     super(detail);
     this.name = "ApiError";
@@ -80,15 +82,20 @@ function redirectToLogin() {
 
 async function toApiError(res: Response): Promise<ApiError> {
   let detail = res.statusText;
+  let code: string | undefined;
   try {
     const body = await res.json();
     if (typeof body?.detail === "string") detail = body.detail;
     else if (Array.isArray(body?.detail)) detail = body.detail[0]?.msg ?? detail;
+    else if (typeof body?.detail?.message === "string") {
+      detail = body.detail.message;
+      code = body.detail.code;
+    }
   } catch {
     // Non-JSON error body (e.g. proxy error page)
   }
   const retryAfter = Number(res.headers.get("Retry-After")) || undefined;
-  return new ApiError(res.status, detail, retryAfter);
+  return new ApiError(res.status, detail, retryAfter, code);
 }
 
 export async function api<T = void>(path: string, options: RequestOptions = {}): Promise<T> {
