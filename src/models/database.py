@@ -11,9 +11,18 @@ def normalize_url(url: str) -> str:
     postgres:// or postgresql:// (which SQLAlchemy maps to psycopg2, not installed here), and
     values copied from a .env file may keep their quotes."""
     url = url.strip().strip("\"'")
+    # A whole .env line pasted as the value: DATABASE_URL_UNPOOLED="postgresql://..."
+    name, sep, rest = url.partition("=")
+    if sep and name.isidentifier() and "://" in rest:
+        url = rest.strip().strip("\"'")
     for prefix in ("postgres://", "postgresql://"):
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix):]
+    if "://" not in url:
+        # Say what is wrong without echoing a value that may hold a password
+        shown = f"{len(url)} characters starting with {url[:12]!r}" if url else "empty"
+        raise RuntimeError(f"DATABASE_URL must be a connection string such as postgresql://user:password@host/db; "
+                           f"it is {shown}")
     return url
 
 
