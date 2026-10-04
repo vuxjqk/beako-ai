@@ -6,6 +6,9 @@
                                 --set key=value overrides a RetrievalConfig field, e.g.
                                 --set method=hybrid scope=true
     generation [--label L]      full QA + LLM judge (uses quota; --resume DIR continues a stopped run)
+    combine --simple D --agent D --policy P
+                                simulate an auto-mode routing policy from a simple run and an
+                                agent run (no LLM calls); saved as a run marked "simulated"
     report                      rebuild data/reports/eval_report.md from all saved runs
 
 retrieval and generation also rebuild the report when they finish.
@@ -14,6 +17,7 @@ retrieval and generation also rebuild the report when they finish.
 import argparse
 from pathlib import Path
 
+from src.core import config
 from src.eval import generation, golden, report, retrieval
 from src.models import SessionLocal
 from src.services.retrieval import default_config
@@ -35,11 +39,29 @@ def main() -> None:
     p.add_argument("--judge-model", help="default: LLM_MODEL")
     p.add_argument("--pause", type=float, default=4.0, help="seconds between LLM calls (free-tier rate limits)")
     p.add_argument("--resume", type=Path, help="run directory to continue")
+    p.add_argument("--mode", choices=["simple", "agent", "auto"], help="QA path (default: QA_MODE)")
+    p.add_argument("--max-retry-wait", type=float, default=90.0,
+                   help="seconds to sit out a rate limit before failing a question (batch runs can wait longer "
+                        "than an API request; free tier asks for up to ~60 s)")
     p.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="retrieval setting overrides")
     p.add_argument("--only", nargs="*", help="question ids (default: all)")
+    p = sub.add_parser("combine")
+    p.add_argument("--simple", required=True, help="run directory name of a --mode simple run")
+    p.add_argument("--agent", required=True, help="run directory name of a --mode agent run")
+    p.add_argument("--policy", required=True, choices=generation.POLICIES)
+    p.add_argument("--label")
     sub.add_parser("report")
     args = ap.parse_args()
 
+    if args.cmd == "combine":
+        r = generation.combine(args.simple, args.agent, args.policy, args.label)
+        i = r["summary"]["in_scope"]
+        print(f"[{args.policy}] score={i['score']} correct={i['correct']} false_refusal={i['false_refusal']} "
+              f"oos_handled={r['summary']['out_of_scope']['handled']} "
+              f"llm_calls={r['summary']['cost']['llm_calls_avg']} agent_share={r['summary']['cost']['agent_share']}")
+        print(f"run: {r['path']}")
+        print(f"report: {report.build()}")
+        return
     if args.cmd == "report":
         print(f"report: {report.build()}")
         return
@@ -70,8 +92,9 @@ def main() -> None:
                   f"latency={r['summary']['latency_ms_avg']}ms fingerprint={r['fingerprint']}")
         else:
             cfg = default_config().with_overrides(args.set)
-            r = generation.run(db, args.label, args.judge_model, args.pause, cfg, args.resume,
-                               set(args.only or []))
+            config.LLM_MAX_RETRY_WAIT_SECONDS = args.max_retry_wait
+            r = generation.run(db, args.label, args.judge_model, args.pause, cfg,
+                               args.mode or config.QA_MODE, args.resume, set(args.only or []))
             i, o = r["summary"]["in_scope"], r["summary"]["out_of_scope"]
             print(f"score={i['score']} correct={i['correct']} false_refusal={i['false_refusal']} "
                   f"oos_handled={o['handled']} errors={r['summary']['errors']}")

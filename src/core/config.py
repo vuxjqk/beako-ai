@@ -52,3 +52,10 @@ RETRIEVAL_EXACT = os.getenv("RETRIEVAL_EXACT", "false").lower() == "true"
 RETRIEVAL_SCOPE = os.getenv("RETRIEVAL_SCOPE") or "boost"  # off | filter | boost
 RETRIEVAL_RERANK = os.getenv("RETRIEVAL_RERANK", "")  # cross-encoder model name; empty = off
 RETRIEVAL_RERANK_TOP = int(os.getenv("RETRIEVAL_RERANK_TOP", "20"))
+# simple (one search + one LLM call) | agent (tool-using loop, 3-6 LLM calls) | auto (route by question)
+QA_MODE = os.getenv("QA_MODE") or "agent"
+# In auto mode, retry with the agent when the simple path finds nothing
+QA_ESCALATE = (os.getenv("QA_ESCALATE") or "false").lower() == "true"
+# Agent limits: model calls per question, and prompt size after which it must answer
+AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "6"))
+AGENT_MAX_CONTEXT_TOKENS = int(os.getenv("AGENT_MAX_CONTEXT_TOKENS", "40000"))

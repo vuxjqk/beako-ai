@@ -56,8 +56,17 @@ def retrieval_config(db: Session, depth: int, cfg: RetrievalConfig) -> dict:
     }
 
 
-def generation_config(judge_model: str) -> dict:
+def generation_config(judge_model: str, mode: str) -> dict:
+    from src.services import agent
+
     return {
+        "qa_mode": mode,
+        "qa_escalate": config.QA_ESCALATE if mode == "auto" else None,
+        "agent": None if mode == "simple" else {
+            "max_steps": config.AGENT_MAX_STEPS,
+            "max_context_tokens": config.AGENT_MAX_CONTEXT_TOKENS,
+            "system_prompt_sha256": hashlib.sha256(agent.SYSTEM_PROMPT.encode()).hexdigest()[:12],
+        },
         "provider": config.LLM_PROVIDER,
         "model": config.LLM_MODEL,
         "temperature": config.LLM_TEMPERATURE,

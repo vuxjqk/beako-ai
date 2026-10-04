@@ -101,8 +101,8 @@ def _judge(prompt: str, model: str) -> tuple[dict, dict]:
 
 
 def evaluate_question(db: Session, q: golden.Question, judge_model: str, pause: float,
-                      cfg: RetrievalConfig) -> dict:
-    a = answer_question(db, q.question, cfg=cfg)
+                      cfg: RetrievalConfig, mode: str) -> dict:
+    a = answer_question(db, q.question, cfg=cfg, mode=mode)
     out = {
         "id": q.id,
         "category": q.category,
@@ -113,6 +113,10 @@ def evaluate_question(db: Session, q: golden.Question, judge_model: str, pause: 
         "model": a.model,
         "usage": a.usage,
         "timings_ms": a.timings_ms,
+        "mode": a.mode,
+        "route_reason": a.route_reason,
+        "llm_calls": sum(1 for t in a.trace if "llm" in t) or 1,
+        "trace": a.trace,
         "context_chunk_ids": [s["chunk_id"] for s in a.sources],
         "cited_refs": [s["ref"] for s in a.sources if s["cited"]],
         "judge_usage": {},
@@ -202,6 +206,9 @@ def aggregate(results: list[dict]) -> dict:
             "judge_tokens_avg": _mean([r["judge_usage"].get("total_tokens", 0) for r in ok if r["judge_usage"]]),
             "retrieval_ms_avg": _mean([r["timings_ms"]["retrieval"] for r in ok]),
             "llm_ms_avg": _mean([r["timings_ms"]["llm"] for r in ok]),
+            "total_ms_avg": _mean([r["timings_ms"]["retrieval"] + r["timings_ms"]["llm"] for r in ok]),
+            "llm_calls_avg": _mean([r.get("llm_calls", 1) for r in ok]),
+            "agent_share": rate(ok, lambda r: r.get("mode", "simple") != "simple"),
         },
     }
     # Where the failures come from: was the gold evidence in the context the LLM saw?
@@ -224,7 +231,7 @@ def aggregate(results: list[dict]) -> dict:
 
 
 def run(db: Session, label: str | None, judge_model: str | None, pause: float, cfg: RetrievalConfig,
-        resume: Path | None = None, only: set[str] | None = None) -> dict:
+        mode: str, resume: Path | None = None, only: set[str] | None = None) -> dict:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
     questions, sha = golden.load()
@@ -240,10 +247,11 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
         run_dir = runs.new_run_dir("generation", label)
         record = runs.header("generation", label, sha, len(targets))
         record["config"] = {"retrieval": runs.retrieval_config(db, config.QA_TOP_K, cfg),
-                            "generation": runs.generation_config(judge_model)}
+                            "generation": runs.generation_config(judge_model, mode)}
         (run_dir / "header.json").write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
     judge_model = record["config"]["generation"]["judge_model"]  # a resumed run keeps its judge
     cfg = RetrievalConfig(**record["config"]["retrieval"]["settings"]) if resume else cfg
+    mode = record["config"]["generation"].get("qa_mode", "simple")
 
     results_path = run_dir / "results.jsonl"
     done: dict[str, dict] = {}
@@ -258,7 +266,7 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
             if q.id in done:
                 continue
             try:
-                r = evaluate_question(db, q, judge_model, pause, cfg)
+                r = evaluate_question(db, q, judge_model, pause, cfg, mode)
                 consecutive = 0
             except (llm.LLMError, ValueError) as e:
                 r = {"id": q.id, "category": q.category, "error": str(e)[:500]}
@@ -276,6 +284,56 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
 
     results = [done[q.id] if q.id in done else {"id": q.id, "category": q.category, "error": "not run"}
                for q in targets]
+    record["complete"] = all("error" not in r for r in results)
+    record["summary"] = aggregate(results)
+    record["results"] = results
+    record["path"] = str(runs.save(run_dir, record))
+    return record
+
+
+POLICIES = ("route", "escalate", "route+escalate")
+
+
+def combine(simple_dir: str, agent_dir: str, policy: str, label: str | None) -> dict:
+    """Simulate an auto-mode policy from a simple-mode run and an agent-mode run of the same
+    golden set, without new LLM calls: each question takes the result its path would have produced.
+    - route: questions route() sends to the agent take the agent result
+    - escalate: simple-path refusals are retried by the agent (cost of both is counted)
+    The result is saved as a generation run marked "simulated"; confirm a chosen policy with a
+    real --mode auto run."""
+    from src.services.qa import route
+
+    if policy not in POLICIES:
+        raise ValueError(f"policy must be one of {POLICIES}")
+    load = lambda d: json.loads((runs.RUNS_DIR / d / "run.json").read_text(encoding="utf-8"))
+    simple, agent = load(simple_dir), load(agent_dir)
+    if simple["golden_set"] != agent["golden_set"]:
+        raise SystemExit("the two runs used different golden sets")
+    questions = {q.id: q for q in golden.load()[0]}
+    by_agent = {r["id"]: r for r in agent["results"]}
+    results = []
+    for s in simple["results"]:
+        a = by_agent.get(s["id"])
+        use = s
+        if a is not None and "error" not in a and "error" not in s:
+            routed = route(questions[s["id"]].question)[0] == "agent" if "route" in policy else False
+            refused = s.get("verdict") in ("refused", "empty")
+            if routed:
+                use = {**a, "mode": "agent"}
+            elif "escalate" in policy and refused:
+                use = {**a, "mode": "simple+agent",
+                       "usage": {k: s["usage"].get(k, 0) + a["usage"].get(k, 0)
+                                 for k in set(s["usage"]) | set(a["usage"])},
+                       "timings_ms": {k: s["timings_ms"].get(k, 0) + a["timings_ms"].get(k, 0)
+                                      for k in s["timings_ms"]},
+                       "llm_calls": s.get("llm_calls", 1) + a.get("llm_calls", 1)}
+        results.append(use)
+    run_dir = runs.new_run_dir("generation", label or f"sim-{policy}")
+    record = runs.header("generation", label or f"sim-{policy}", "", len(results))
+    record["golden_set"] = simple["golden_set"]
+    record["simulated"] = {"policy": policy, "simple_run": simple_dir, "agent_run": agent_dir}
+    record["config"] = {"retrieval": simple["config"]["retrieval"],
+                        "generation": {**agent["config"]["generation"], "qa_mode": f"auto ({policy}, simulated)"}}
     record["complete"] = all("error" not in r for r in results)
     record["summary"] = aggregate(results)
     record["results"] = results

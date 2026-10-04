@@ -1,0 +1,5861 @@
+{
+ "kind": "generation",
+ "label": "s6-sim-escalate",
+ "started_at": "2026-10-04T05:09:49+00:00",
+ "code": {
+  "commit": "40a6c5e",
+  "src_sha256": "0de809e69855"
+ },
+ "golden_set": {
+  "sha256": "abd3887b94c3",
+  "questions": 82
+ },
+ "simulated": {
+  "policy": "escalate",
+  "simple_run": "20261004-032603-generation-s5-hybrid-boost-cand100",
+  "agent_run": "20261004-044909-generation-s6-agent-all-v2"
+ },
+ "config": {
+  "retrieval": {
+   "method": "hybrid candidates=100 scope=boost",
+   "settings": {
+    "method": "hybrid",
+    "keyword": "bm25",
+    "candidates": 100,
+    "rrf_k": 60,
+    "exact": false,
+    "scope": "boost",
+    "rerank": "",
+    "rerank_top": 20
+   },
+   "embedding_model": "BAAI/bge-small-en-v1.5",
+   "qa_top_k": 6,
+   "depth": 6,
+   "chunks": [
+    {
+     "chunker_version": "v1 target=350 max=450 min=120 scene=175 overlap=80",
+     "embedding_model": "BAAI/bge-small-en-v1.5",
+     "count": 10457
+    }
+   ]
+  },
+  "generation": {
+   "qa_mode": "auto (escalate, simulated)",
+   "qa_escalate": null,
+   "agent": {
+    "max_steps": 6,
+    "max_context_tokens": 40000,
+    "system_prompt_sha256": "5cee6609d312"
+   },
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "temperature": 0.2,
+   "max_output_tokens": 700,
+   "reasoning_effort": null,
+   "system_prompt_sha256": "3293f3463740",
+   "system_prompt": "You answer questions about the light novel series \"Re:ZERO -Starting Life in Another World-\".\nYou are given numbered passages retrieved from the novels. Follow these rules strictly:\n1. Use ONLY information stated in the passages. Do not use outside knowledge of the series (anime, wiki, later volumes), even if you know it.\n2. Cite the passage number for every claim in square brackets, e.g. [2] or [1][3].\n3. If the passages do not contain enough information to answer, reply with exactly: Not found in the provided passages.\n4. Do not guess or fill gaps. If the passages answer only part of the question, answer that part and say what is missing.\n5. Answer in English, concisely (at most about 150 words).",
+   "judge_model": "gemini-3.5-flash-lite"
+  }
+ },
+ "complete": true,
+ "summary": {
+  "errors": 0,
+  "in_scope": {
+   "n": 67,
+   "correct": 0.5373,
+   "partial": 0.3881,
+   "incorrect": 0.0299,
+   "false_refusal": 0.0448,
+   "empty": 0.0,
+   "score": 0.7313,
+   "gold_in_context": 0.6119
+  },
+  "faithfulness": {
+   "n_answered": 64,
+   "supported": 0.9531,
+   "partially_supported": 0.0469,
+   "unsupported": 0.0,
+   "no_citations": 0.0,
+   "cites_gold_chunk": 0.5781
+  },
+  "out_of_scope": {
+   "n": 15,
+   "handled": 1.0,
+   "answered": 0.0,
+   "empty": 0.0,
+   "by_type": {
+    "general": 1.0,
+    "not_in_text": 1.0,
+    "false_premise": 1.0,
+    "beyond_corpus": 1.0
+   }
+  },
+  "cost": {
+   "prompt_tokens_avg": 6778.9,
+   "completion_tokens_avg": 105.1,
+   "judge_tokens_avg": 1724.2,
+   "retrieval_ms_avg": 203.6,
+   "llm_ms_avg": 4199.3,
+   "total_ms_avg": 4402.9,
+   "llm_calls_avg": 2.3,
+   "agent_share": 0.3902
+  },
+  "attribution": {
+   "gold_in_context": {
+    "correct": 30,
+    "partial": 10,
+    "incorrect": 0,
+    "refused": 1,
+    "empty": 0
+   },
+   "gold_not_in_context": {
+    "correct": 6,
+    "partial": 16,
+    "incorrect": 2,
+    "refused": 2,
+    "empty": 0
+   }
+  },
+  "by_split": {
+   "dev": {
+    "n": 47,
+    "correct": 0.5532,
+    "score": 0.734
+   },
+   "test": {
+    "n": 20,
+    "correct": 0.5,
+    "score": 0.725
+   }
+  },
+  "by_category": {
+   "fact": {
+    "n": 35,
+    "correct": 0.7143,
+    "score": 0.8
+   },
+   "relationship": {
+    "n": 14,
+    "correct": 0.5714,
+    "score": 0.7857
+   },
+   "multi_hop": {
+    "n": 9,
+    "correct": 0.2222,
+    "score": 0.5556
+   },
+   "summary": {
+    "n": 9,
+    "correct": 0.1111,
+    "score": 0.5556
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "fact-01",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "In Volume 1, Chapter 2, Subaru is killed by **Elsa** (the Bowel Hunter) at the loot house [2, 4, 7]. She slashes his stomach open with a large blade [2, 7].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 11146,
+    "prompt_tokens": 11036,
+    "completion_tokens": 110
+   },
+   "timings_ms": {
+    "retrieval": 6982,
+    "llm": 10113
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 4,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1026,
+      "completion_tokens": 25,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Subaru loot house killed Chapter 2"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2990,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Subaru killed loot house Elsa Chapter 2"
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4661,
+      "completion_tokens": 52,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    104,
+    96,
+    82,
+    183,
+    107,
+    184,
+    157,
+    186,
+    182
+   ],
+   "cited_refs": [
+    2,
+    4,
+    7
+   ],
+   "judge_usage": {
+    "completion_tokens": 74,
+    "prompt_tokens": 1655,
+    "total_tokens": 1729
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Elsa as the killer and mentions that she slashes his stomach with a blade, aligning with the reference answer and supported by the cited passages."
+  },
+  {
+   "id": "fact-02",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Subaru calls the power \"Return by Death\" [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 13,
+    "prompt_tokens": 2419,
+    "total_tokens": 2432
+   },
+   "timings_ms": {
+    "retrieval": 85,
+    "llm": 1271
+   },
+   "context_chunk_ids": [
+    181,
+    2668,
+    3869,
+    8115,
+    1570,
+    8131
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 68,
+    "prompt_tokens": 804,
+    "total_tokens": 872
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the name Subaru gives to his power as \"Return by Death,\" which is fully supported by the cited text."
+  },
+  {
+   "id": "fact-03",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "She gives the name Emilia, adding, \"Just Emilia\" [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 15,
+    "prompt_tokens": 2361,
+    "total_tokens": 2376
+   },
+   "timings_ms": {
+    "retrieval": 140,
+    "llm": 1181
+   },
+   "context_chunk_ids": [
+    302,
+    49,
+    300,
+    16,
+    17,
+    301
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 88,
+    "prompt_tokens": 797,
+    "total_tokens": 885
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "incorrect",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer says the girl gives the name Emilia, which is supported by the cited passage, but the reference answer states that she gives the false name 'Satella' in Volume 1 when first asked, making the system answer factually incorrect regarding the Re:ZERO novel continuity."
+  },
+  {
+   "id": "fact-04",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "The silver-haired girl tells Subaru that her name is Emilia (specifically, \"Just Emilia\") [3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 22,
+    "prompt_tokens": 2580,
+    "total_tokens": 2602
+   },
+   "timings_ms": {
+    "retrieval": 149,
+    "llm": 1087
+   },
+   "context_chunk_ids": [
+    16,
+    49,
+    302,
+    166,
+    27,
+    17
+   ],
+   "cited_refs": [
+    3
+   ],
+   "judge_usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 801,
+    "total_tokens": 868
+   },
+   "gold_context_ranks": [
+    3
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the name given by the girl as Emilia ('Just Emilia') based on the text and the reference answer."
+  },
+  {
+   "id": "fact-05",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "In Volume 1, Chapter 3, as Subaru tries to push past the three thugs in the alley, his legs suddenly twist and he falls to his knees [8, 9]. While he is on the ground, struggling to stand and realizing his body is failing him, the thug he named \"Dumber\" sneaks up and stabs him in the back with a knife [9]. His guts are damaged, resulting in his third death [4, 9].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 21633,
+    "prompt_tokens": 21401,
+    "completion_tokens": 232
+   },
+   "timings_ms": {
+    "retrieval": 152,
+    "llm": 11805
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1020,
+      "completion_tokens": 25,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru third death alley Chapter 3",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2825,
+      "completion_tokens": 30,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "killed died third time alley",
+      "chapter": "Chapter 3",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": []
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 2885,
+      "completion_tokens": 14,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 1
+     },
+     "new_passages": []
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 3016,
+      "completion_tokens": 30,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "read_chapter",
+     "args": {
+      "volume": 1,
+      "page": 3,
+      "chapter": "Chapter 3: Ending and Beginning"
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 4625,
+      "completion_tokens": 30,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "query": "stabbed guts die back",
+      "volumes": [
+       1
+      ],
+      "chapter": "Chapter 3"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 4704,
+      "completion_tokens": 96,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    170,
+    171,
+    190,
+    178,
+    168,
+    172,
+    173,
+    174,
+    175
+   ],
+   "cited_refs": [
+    4,
+    8,
+    9
+   ],
+   "judge_usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 1639,
+    "total_tokens": 1706
+   },
+   "gold_context_ranks": [
+    9
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly includes all key points regarding Subaru's third death, and all statements are directly supported by the cited passages."
+  },
+  {
+   "id": "fact-06",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Subaru had his cell phone, which was his priciest and most useful possession from home, along with a few other personal belongings [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 30,
+    "prompt_tokens": 2340,
+    "total_tokens": 2370
+   },
+   "timings_ms": {
+    "retrieval": 66,
+    "llm": 982
+   },
+   "context_chunk_ids": [
+    1691,
+    5,
+    2735,
+    1074,
+    1093,
+    7470
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 97,
+    "prompt_tokens": 817,
+    "total_tokens": 914
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer mentions the cell phone and 'other personal belongings' which are present in the passage, but it is incomplete compared to the required key points (wallet, convenience store bag with instant ramen/snacks) which are missing. The claims made are supported by the cited text."
+  },
+  {
+   "id": "fact-07",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Elsa is known by the alias \"Bowel Hunter\" (or Elsa \"The Bowel Hunter\" Gramhilde) [1][2][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 32,
+    "prompt_tokens": 2442,
+    "total_tokens": 2474
+   },
+   "timings_ms": {
+    "retrieval": 56,
+    "llm": 1356
+   },
+   "context_chunk_ids": [
+    281,
+    291,
+    287,
+    284,
+    204,
+    280
+   ],
+   "cited_refs": [
+    1,
+    2,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 56,
+    "prompt_tokens": 1543,
+    "total_tokens": 1599
+   },
+   "gold_context_ranks": [
+    2,
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Elsa's nickname as the 'Bowel Hunter' and matches the details provided in the text."
+  },
+  {
+   "id": "fact-08",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Rem uses an iron ball against Subaru [1][5]. Specifically, during the second loop, Subaru died from debilitation via a curse as well as having his head smashed by an iron ball [1], and Rem is described as wielding that violent device with unbelievable force in the forest [5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 65,
+    "prompt_tokens": 2333,
+    "total_tokens": 2398
+   },
+   "timings_ms": {
+    "retrieval": 112,
+    "llm": 1211
+   },
+   "context_chunk_ids": [
+    614,
+    613,
+    568,
+    612,
+    564,
+    615
+   ],
+   "cited_refs": [
+    1,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 80,
+    "prompt_tokens": 1141,
+    "total_tokens": 1221
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer identifies the weapon as an 'iron ball', which is mentioned in the passages, but it misses the specific details 'morning star' and 'spiked', making it partially correct. All claims made are supported by the provided text."
+  },
+  {
+   "id": "fact-09",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Subaru concludes that the casters of the curse were the demon beasts (specifically, a puppy/demon beast that bit him), acting as the vector or medium to propagate the curse, rather than human hands [4][5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 51,
+    "prompt_tokens": 2465,
+    "total_tokens": 2516
+   },
+   "timings_ms": {
+    "retrieval": 98,
+    "llm": 1421
+   },
+   "context_chunk_ids": [
+    650,
+    827,
+    762,
+    778,
+    925,
+    874
+   ],
+   "cited_refs": [
+    4,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 71,
+    "prompt_tokens": 1201,
+    "total_tokens": 1272
+   },
+   "gold_context_ranks": [
+    4
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies that the curse came from the demon beast/puppy that bit Subaru, referencing the exact text and capturing all key points."
+  },
+  {
+   "id": "fact-10",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "According to Rem's interlude, Ram lost her horn when it was severed by a flash of steel to the side of her head while she was shielding Rem and taking a blow for her [1][2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 43,
+    "prompt_tokens": 2406,
+    "total_tokens": 2449
+   },
+   "timings_ms": {
+    "retrieval": 79,
+    "llm": 1481
+   },
+   "context_chunk_ids": [
+    889,
+    888,
+    882,
+    953,
+    883,
+    932
+   ],
+   "cited_refs": [
+    1,
+    2
+   ],
+   "judge_usage": {
+    "completion_tokens": 70,
+    "prompt_tokens": 1044,
+    "total_tokens": 1114
+   },
+   "gold_context_ranks": [
+    1,
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately captures how Ram lost her horn while shielding Rem and taking a blow, and all details are directly supported by the provided text."
+  },
+  {
+   "id": "fact-11",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Crusch Karsten's blessing (divine protection) is the **blessing of wind reading**, which allows her to discern falsehoods and judge that which cannot be seen by the eye by observing the wind that envelops other people [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 13907,
+    "prompt_tokens": 13776,
+    "completion_tokens": 131
+   },
+   "timings_ms": {
+    "retrieval": 393,
+    "llm": 12296
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1016,
+      "completion_tokens": 21,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Crusch Karsten blessing divine protection name"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2875,
+      "completion_tokens": 21,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Crusch Karsten divine protection OR blessing"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 2951,
+      "completion_tokens": 32,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Crusch blessing wind falsehood",
+      "volumes": [
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 4571,
+      "completion_tokens": 50,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1942,
+    1301,
+    1149,
+    1284,
+    2128,
+    1890,
+    2698,
+    1886,
+    1150
+   ],
+   "cited_refs": [
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 801,
+    "total_tokens": 868
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Crusch's blessing as the blessing of wind reading, which is fully supported by the cited text."
+  },
+  {
+   "id": "fact-12",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Petelgeuse introduces his title by staying bent over after bowing, twisting only his head to face forward, and stating: \"—Archbishop of Sin of the Witch Cult…entrusted with the duties of Slooooth!\" [1][2]",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 51,
+    "prompt_tokens": 2140,
+    "total_tokens": 2191
+   },
+   "timings_ms": {
+    "retrieval": 90,
+    "llm": 1473
+   },
+   "context_chunk_ids": [
+    1510,
+    1275,
+    1511,
+    1541,
+    1542,
+    1543
+   ],
+   "cited_refs": [
+    1,
+    2
+   ],
+   "judge_usage": {
+    "completion_tokens": 84,
+    "prompt_tokens": 959,
+    "total_tokens": 1043
+   },
+   "gold_context_ranks": [
+    1,
+    3
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Petelgeuse's title as the Archbishop of Sin of the Witch Cult entrusted with Sloth, matching all key points, and all details are directly supported by the cited text passages."
+  },
+  {
+   "id": "fact-13",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Rem responds with a very sad face, saying, “I cannot run away with you, Subaru,” and explains that when talking about the future, people need to smile [3]. \n\nWhen Subaru attempts to make unconvincing arguments and suggests that they might still have a chance to change her mind if they keep talking, the provided passages do not specify what Subaru tells her next [3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 79,
+    "prompt_tokens": 2328,
+    "total_tokens": 2407
+   },
+   "timings_ms": {
+    "retrieval": 103,
+    "llm": 1616
+   },
+   "context_chunk_ids": [
+    1748,
+    1822,
+    1823,
+    1812,
+    1811,
+    1711
+   ],
+   "cited_refs": [
+    3
+   ],
+   "judge_usage": {
+    "completion_tokens": 83,
+    "prompt_tokens": 930,
+    "total_tokens": 1013
+   },
+   "gold_context_ranks": [
+    2,
+    3
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.3333333333333333,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly provides Rem's response based on the text, but fails to state what Subaru tells her afterward because it claims the passages do not specify it. However, the faithfulness is supported since the claims it does make are strictly from the cited passages."
+  },
+  {
+   "id": "fact-14",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "In return for an alliance between Emilia and Crusch, Subaru offers the magic crystal mining rights in the Great Elior Forest in addition to information on the time and place the White Whale will appear [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 41,
+    "prompt_tokens": 2497,
+    "total_tokens": 2538
+   },
+   "timings_ms": {
+    "retrieval": 104,
+    "llm": 1527
+   },
+   "context_chunk_ids": [
+    1906,
+    1894,
+    2129,
+    2131,
+    1916,
+    2125
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 52,
+    "prompt_tokens": 835,
+    "total_tokens": 887
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer includes all key points from the reference answer and matches the text provided in the cited passage."
+  },
+  {
+   "id": "fact-15",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, a great tree crashes straight into the White Whale from above, pressing it down and immobilizing it under its super-heavy mass [1]. Following this, the lone \"Sword Devil\" (Wilhelm) swoops down with a treasured sword to lower the curtain on the battle, dedicating the strike to his wife, Theresia van Astrea [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 77,
+    "prompt_tokens": 2182,
+    "total_tokens": 2259
+   },
+   "timings_ms": {
+    "retrieval": 134,
+    "llm": 1245
+   },
+   "context_chunk_ids": [
+    2078,
+    2001,
+    2114,
+    2029,
+    1727,
+    2113
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 82,
+    "prompt_tokens": 759,
+    "total_tokens": 841
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies that Wilhelm delivered the final blow and explains how the whale was brought down using the Great Tree and the sword strike, matching all key points and finding full support in the cited text."
+  },
+  {
+   "id": "fact-16",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Petelgeuse meets his end after being struck by Julius's rainbow-colored sword blow, which scorches the accumulation of mana—the evil spirit's true body—to the core [1]. Following this, while on a wagon, his body (stripped of limbs and blood) is pulled straight toward the wheel, where he is pulverized and his life trampled away as his body and voice are swallowed by the wheel [4]. The essence of the evil spirit dwelling within is then drawn in until it dissipates [4]. Additionally, a rock slide caused by a meaningless final impulse of his Unseen Hand occurs overhead [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 134,
+    "prompt_tokens": 2463,
+    "total_tokens": 2597
+   },
+   "timings_ms": {
+    "retrieval": 70,
+    "llm": 1683
+   },
+   "context_chunk_ids": [
+    2680,
+    2669,
+    2720,
+    2719,
+    2679,
+    2648
+   ],
+   "cited_refs": [
+    1,
+    4
+   ],
+   "judge_usage": {
+    "completion_tokens": 90,
+    "prompt_tokens": 1369,
+    "total_tokens": 1459
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies that Julius's rainbow sword struck Petelgeuse and that he was crushed by a rock slide caused by his own Unseen Hand, matching all key points. All details are fully supported by the provided text passages."
+  },
+  {
+   "id": "fact-17",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Otto Suwen's blessing allows him to understand the voices and language of living creatures (such as Zodda bugs, family land dragons, and creatures in the forest) [1][3][4][5][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 46,
+    "prompt_tokens": 2331,
+    "total_tokens": 2377
+   },
+   "timings_ms": {
+    "retrieval": 30,
+    "llm": 1508
+   },
+   "context_chunk_ids": [
+    4190,
+    4200,
+    4191,
+    4195,
+    4202,
+    4204
+   ],
+   "cited_refs": [
+    1,
+    3,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 63,
+    "prompt_tokens": 2389,
+    "total_tokens": 2452
+   },
+   "gold_context_ranks": [
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately identifies Otto's blessing (the blessing of language/understanding voices and language of living creatures) and is fully supported by the cited text."
+  },
+  {
+   "id": "fact-18",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Garfiel possesses the blessing of the earth spirit [3]. In battle, this blessing gives him the following abilities:\n* It heightens his healing abilities [3].\n* It allows him to churn up the ground or cause it to cave in (though the range is limited to where his limbs can reach, and he can use it to kick up packed earth or soil as a projectile) [3].\n* He can activate it with his hind legs/back to lift a square segment of a floor to drain water, or to repel an opponent's enormous frame from beneath his feet [1][2][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 133,
+    "prompt_tokens": 2400,
+    "total_tokens": 2533
+   },
+   "timings_ms": {
+    "retrieval": 51,
+    "llm": 1918
+   },
+   "context_chunk_ids": [
+    6614,
+    6610,
+    4836,
+    6617,
+    6166,
+    6498
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 65,
+    "prompt_tokens": 2099,
+    "total_tokens": 2164
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the blessing as the blessing of the earth spirit and lists its combat abilities, including healing, all of which are accurately supported by the provided passages."
+  },
+  {
+   "id": "fact-19",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the barrier around the Sanctuary affects people who carry mixed human and demi-blood (mixed-blood people), keeping them trapped inside so they cannot get out [1][3][5]. Specifically, it acts upon Emilia, making her a prisoner of the Sanctuary as well [3]. \n\n*(Note: The passages also mention that the barrier keeps outside presences away by leading them astray through the Lost Woods of Clemaldy [2], but does not state who or what is affected by that specific external effect beyond outsiders generally.)*",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 113,
+    "prompt_tokens": 2548,
+    "total_tokens": 2661
+   },
+   "timings_ms": {
+    "retrieval": 60,
+    "llm": 1724
+   },
+   "context_chunk_ids": [
+    3723,
+    2915,
+    3019,
+    4436,
+    4601,
+    4418
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 92,
+    "prompt_tokens": 2092,
+    "total_tokens": 2184
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies people of mixed blood and that the barrier traps them inside, but misses the key point that the barrier knocks them unconscious on contact (which wasn't in the cited passages, explaining why the system left it out). All claims made by the system are supported by the provided text."
+  },
+  {
+   "id": "fact-20",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "The three Trials of the Sanctuary tomb consist of:\n\n1. **Facing the past** [9].\n2. **Beholding the unknowable present** (a Trial to make the lying words someone had spoken into a wish come true, experiencing parallel worlds of choices not made) [1][4].\n3. The third Trial (which is to be overcome after the second) [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 15739,
+    "prompt_tokens": 15592,
+    "completion_tokens": 147
+   },
+   "timings_ms": {
+    "retrieval": 278,
+    "llm": 8209
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1009,
+      "completion_tokens": 19,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "three Trials of the Sanctuary tomb"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2874,
+      "completion_tokens": 21,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "first Trial second Trial third Trial tomb Sanctuary"
+     },
+     "new_passages": [
+      6,
+      8
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4118,
+      "completion_tokens": 19,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "\"first Trial\" Sanctuary tomb"
+     },
+     "new_passages": [
+      9,
+      11
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5211,
+      "completion_tokens": 81,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    4631,
+    3724,
+    3049,
+    4023,
+    2966,
+    4760,
+    4408,
+    4764,
+    3145,
+    3188,
+    3148
+   ],
+   "cited_refs": [
+    1,
+    4,
+    9
+   ],
+   "judge_usage": {
+    "completion_tokens": 70,
+    "prompt_tokens": 1525,
+    "total_tokens": 1595
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the first two trials based on the text, but fails to actually state what the third trial is, leaving it incomplete."
+  },
+  {
+   "id": "fact-21",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 29083,
+    "prompt_tokens": 28938,
+    "completion_tokens": 145
+   },
+   "timings_ms": {
+    "retrieval": 257,
+    "llm": 13843
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1017,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Elsa death killed Volume 15",
+      "volumes": [
+       15
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3087,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Elsa Rock Pig Volume 15",
+      "volumes": [
+       15
+      ]
+     },
+     "new_passages": [
+      6,
+      8
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4254,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       15
+      ],
+      "query": "Elsa burned fire Volume 15"
+     },
+     "new_passages": [
+      9,
+      12
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5969,
+      "completion_tokens": 27,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       15
+      ],
+      "query": "Elsa killed Volume 15 fire mansion"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 6053,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       15
+      ],
+      "query": "Elsa burns fire Volume 15"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 6156,
+      "completion_tokens": 7,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    4774,
+    4851,
+    4848,
+    4852,
+    4939,
+    4843,
+    4778,
+    4833,
+    4828,
+    4832,
+    4835,
+    4834
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "gold_context_ranks": [
+    4
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": false,
+   "verdict": "refused"
+  },
+  {
+   "id": "fact-22",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "According to Echidna, the Great Rabbit is a demon beast that can infinitely divide from a single individual, meaning they all began from the same individual creature [1]. They operate as a horde, share the same sense of hunger, and are completely devoted to eliminating the very possibility of life, with no desires other than eating all other living things [1][5]. Echidna also notes that the appropriate term for the three great demon beasts—of which the Great Rabbit is considered the worst of foes—is \"natural disasters\" [2][3][5]. \n\nThe Great Rabbit was left behind as a negative legacy by Daphne, the \"Witch of Gluttony\" [2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 141,
+    "prompt_tokens": 2489,
+    "total_tokens": 2630
+   },
+   "timings_ms": {
+    "retrieval": 58,
+    "llm": 1770
+   },
+   "context_chunk_ids": [
+    3521,
+    3517,
+    3518,
+    3522,
+    3519,
+    3841
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 64,
+    "prompt_tokens": 2064,
+    "total_tokens": 2128
+   },
+   "gold_context_ranks": [
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately captures all the key points from the reference answer and is fully backed by the provided text citations."
+  },
+  {
+   "id": "fact-23",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Regulus Corneas dies by drowning [3][4]. After breaking through the stone pavement and sinking deep underground, he is trapped as the city of water fills his grave with water and mud [1][3]. While attempting to survive using his ability, Lion Heart, he alternates between momentary invincibility and impending mortality, suffering from the water flooding his lungs [1][4]. Ultimately, his ability cannot save him from the watery counterattack of the ruined city [3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 96,
+    "prompt_tokens": 2248,
+    "total_tokens": 2344
+   },
+   "timings_ms": {
+    "retrieval": 64,
+    "llm": 1841
+   },
+   "context_chunk_ids": [
+    6459,
+    6462,
+    6460,
+    6458,
+    6452,
+    6461
+   ],
+   "cited_refs": [
+    1,
+    3,
+    4
+   ],
+   "judge_usage": {
+    "completion_tokens": 66,
+    "prompt_tokens": 1587,
+    "total_tokens": 1653
+   },
+   "gold_context_ranks": [
+    4,
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately describes how Regulus dies (drowning underground after sinking deep into the ground) and includes all key points while being fully supported by the provided text citations."
+  },
+  {
+   "id": "fact-24",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "The full name of the Archbishop is Sirius Romanée-Conti, and she is charged with Wrath [1][2][3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 27,
+    "prompt_tokens": 2354,
+    "total_tokens": 2381
+   },
+   "timings_ms": {
+    "retrieval": 87,
+    "llm": 1472
+   },
+   "context_chunk_ids": [
+    5425,
+    5443,
+    5424,
+    5221,
+    5164,
+    5163
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3
+   ],
+   "judge_usage": {
+    "completion_tokens": 75,
+    "prompt_tokens": 1478,
+    "total_tokens": 1553
+   },
+   "gold_context_ranks": [
+    1,
+    3
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Sirius Romanée-Conti and her sin (Wrath), matching the reference answer, and all information is fully supported by the cited passages."
+  },
+  {
+   "id": "fact-25",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "The Archbishop of Lust introduces herself as Capella Emerada Lugunica [1][3][4].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 20,
+    "prompt_tokens": 1729,
+    "total_tokens": 1749
+   },
+   "timings_ms": {
+    "retrieval": 65,
+    "llm": 988
+   },
+   "context_chunk_ids": [
+    5601,
+    5585,
+    5751,
+    5673,
+    5674,
+    5600
+   ],
+   "cited_refs": [
+    1,
+    3,
+    4
+   ],
+   "judge_usage": {
+    "completion_tokens": 75,
+    "prompt_tokens": 1162,
+    "total_tokens": 1237
+   },
+   "gold_context_ranks": [
+    1,
+    2,
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system correctly identified the full name Capella Emerada Lugunica used by the Archbishop of Lust in Volume 17, which is fully supported by the cited passages."
+  },
+  {
+   "id": "fact-26",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 28646,
+    "prompt_tokens": 28508,
+    "completion_tokens": 138
+   },
+   "timings_ms": {
+    "retrieval": 445,
+    "llm": 10929
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1023,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Crusch Rem convoy White Whale head Archbishops attack"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2998,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Archbishops attack Crusch Rem convoy White Whale head"
+     },
+     "new_passages": [
+      6,
+      6
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3463,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Volume 7 chapter return White Whale head Archbishops"
+     },
+     "new_passages": [
+      7,
+      10
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5102,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "Volume 7 Chapter 7 Archbishops attack Crusch convoy"
+     },
+     "new_passages": [
+      11,
+      14
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 6685,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "query": "which two Archbishops attack Crusch Rem returning White Whale head"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 6785,
+      "completion_tokens": 7,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1981,
+    1990,
+    1982,
+    1984,
+    1985,
+    1995,
+    2124,
+    2003,
+    1991,
+    2113,
+    2818,
+    2817,
+    5583,
+    5584
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "refused"
+  },
+  {
+   "id": "fact-27",
+   "category": "fact",
+   "split": "test",
+   "oos_type": null,
+   "answer": "When Reid Astrea faces the group in the Pleiades Watchtower, he fights using a pair of wooden chopsticks as his weapons [1, 2, 5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6590,
+    "prompt_tokens": 6506,
+    "completion_tokens": 84
+   },
+   "timings_ms": {
+    "retrieval": 185,
+    "llm": 4471
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1025,
+      "completion_tokens": 42,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       21,
+       22,
+       23,
+       24,
+       25
+      ],
+      "query": "Reid Astrea fight weapon chopsticks Pleiades Watchtower"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3142,
+      "completion_tokens": 35,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    7970,
+    8237,
+    7172,
+    7350,
+    8035
+   ],
+   "cited_refs": [
+    1,
+    2,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 59,
+    "prompt_tokens": 1618,
+    "total_tokens": 1677
+   },
+   "gold_context_ranks": [
+    4
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies that Reid Astrea fights using a pair of wooden chopsticks as weapons, which is explicitly supported by the cited passages."
+  },
+  {
+   "id": "fact-28",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, after Subaru leaves Emilia and the others to check if he has a cheat ability and concludes he is powerless as ever, he thinks about how he is letting them down and starts heading back to the green room [2]. The passages state that \"The memories after that point were fuzzy,\" and all of a sudden he was lying on the bed [2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 76,
+    "prompt_tokens": 2313,
+    "total_tokens": 2389
+   },
+   "timings_ms": {
+    "retrieval": 106,
+    "llm": 1292
+   },
+   "context_chunk_ids": [
+    7715,
+    7525,
+    7529,
+    7587,
+    7478,
+    7523
+   ],
+   "cited_refs": [
+    2
+   ],
+   "judge_usage": {
+    "completion_tokens": 100,
+    "prompt_tokens": 862,
+    "total_tokens": 962
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "incorrect",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer incorrectly identifies the last thing Subaru remembers based on the immediate context of his recent amnesia within the tower, rather than the reference answer's fact that he only remembers leaving the convenience store and has lost all memories since being summoned. However, the system's claims are fully supported by the text it cited for that specific scene."
+  },
+  {
+   "id": "fact-29",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "When Rem wakes up, she has the same symptoms that Crusch had: because her memories were stolen, she has forgotten herself and does not know who she is [6]. She also does not recognize Subaru [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 44,
+    "prompt_tokens": 2370,
+    "total_tokens": 2414
+   },
+   "timings_ms": {
+    "retrieval": 63,
+    "llm": 1189
+   },
+   "context_chunk_ids": [
+    8509,
+    8520,
+    8512,
+    8539,
+    8760,
+    8498
+   ],
+   "cited_refs": [
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 61,
+    "prompt_tokens": 821,
+    "total_tokens": 882
+   },
+   "gold_context_ranks": [
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately captures that Rem wakes up with memory loss (not knowing herself or Subaru) and aligns with the key points and the cited text."
+  },
+  {
+   "id": "fact-30",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Abel reveals himself to be the seventy-seventh emperor of the Holy Volakian Empire [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 21,
+    "prompt_tokens": 2273,
+    "total_tokens": 2294
+   },
+   "timings_ms": {
+    "retrieval": 54,
+    "llm": 1049
+   },
+   "context_chunk_ids": [
+    8792,
+    8943,
+    8940,
+    8927,
+    8957,
+    8987
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 790,
+    "total_tokens": 857
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Abel as the seventy-seventh emperor of the Holy Volakian Empire, which matches both the reference answer's key points and the provided text passage."
+  },
+  {
+   "id": "fact-31",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Natsumi Schwartz is an alias and persona created by Subaru Natsuki, who cross-dresses and transforms himself into this identity [1][4]. The persona is created because the guards at the inspection points would never forget Rem, Medium, or Louis due to the uproar they caused, meaning Subaru cannot walk through the gates of Guaral as himself or bring Rem along without jeopardizing the plan [1]. Additionally, Natsumi (along with Flora) is tasked with gathering intelligence, as Abel cannot fake a feminine voice [5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 108,
+    "prompt_tokens": 2394,
+    "total_tokens": 2502
+   },
+   "timings_ms": {
+    "retrieval": 49,
+    "llm": 2170
+   },
+   "context_chunk_ids": [
+    8990,
+    8995,
+    8994,
+    9001,
+    9009,
+    8983
+   ],
+   "cited_refs": [
+    1,
+    4,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 65,
+    "prompt_tokens": 1586,
+    "total_tokens": 1651
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately identifies Natsumi Schwartz as Subaru in disguise and explains the reasoning based on the cited text. All claims are fully supported by the provided volume chapters."
+  },
+  {
+   "id": "fact-32",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Regulus Corneas represents the sin of Greed as an Archbishop of the Witch Cult [1][2][3][5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 26,
+    "prompt_tokens": 2223,
+    "total_tokens": 2249
+   },
+   "timings_ms": {
+    "retrieval": 47,
+    "llm": 1108
+   },
+   "context_chunk_ids": [
+    6443,
+    4456,
+    6205,
+    2173,
+    5544,
+    5585
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 71,
+    "prompt_tokens": 1842,
+    "total_tokens": 1913
+   },
+   "gold_context_ranks": [
+    1,
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.6666666666666666,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the sin of Greed for Regulus Corneas, which matches the reference answer and is fully supported by the cited passages."
+  },
+  {
+   "id": "fact-33",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "The mock duel between Subaru and Julius at the parade square of the knights' garrison is excessively one-sided, turning into a severe beating [4][5]. \n\nInitially, the audience of knights and guards cheers and laughs in mockery of Subaru [1][4]. Subaru attempts a trick by dropping a wooden sword to make Julius bend forward, followed by a surprise two-step attack of an upward sword stroke to the chin and throwing sand into Julius's eyes [1][6]. However, Julius easily counters this, delivering a hard jab to Subaru's solar plexus that knocks the wind out of him, causes him to vomit, and slams him to the ground [6].\n\nAs the fight continues, a massive chasm in ability becomes apparent [4]. Julius repeatedly knocks Subaru down while showing no signs of relenting, and Ferris, acting as referee, does not stop the fight despite Subaru's injuries [4]. The onlookers' initial laughter turns to exasperated sighs and a desire for it to end [4]. Emilia, upon hearing that the duel is a one-sided spectacle, rushes from the conference room to stop it [2][5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 234,
+    "prompt_tokens": 2564,
+    "total_tokens": 2798
+   },
+   "timings_ms": {
+    "retrieval": 109,
+    "llm": 2550
+   },
+   "context_chunk_ids": [
+    1230,
+    1232,
+    1227,
+    1238,
+    1235,
+    1231
+   ],
+   "cited_refs": [
+    1,
+    2,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 73,
+    "prompt_tokens": 2612,
+    "total_tokens": 2685
+   },
+   "gold_context_ranks": [
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.3333333333333333,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately describes the one-sided mock duel between Subaru and Julius based on the text, capturing the details of the fight, the use of wooden swords, and the reactions of the crowd and Emilia."
+  },
+  {
+   "id": "fact-34",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "During the battle in Pristella, Julius fought Roy Alphard, the Archbishop of Gluttony [1, 5, 8]. Alphard ultimately overpowered Julius, shattering his sword, severing one of his arms at the elbow [8], and consuming his name [6]. As a result of having his name eaten, Julius became a nameless victim of Gluttony—unlike past victims, he retained his consciousness and memories of himself, but he was completely forgotten by everyone around him, including his close acquaintances like Reinhard and Ferris [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 21486,
+    "prompt_tokens": 21229,
+    "completion_tokens": 257
+   },
+   "timings_ms": {
+    "retrieval": 177,
+    "llm": 13700
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1022,
+      "completion_tokens": 27,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Julius Roy Alphard fight after Pristella",
+      "volumes": [
+       20
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3098,
+      "completion_tokens": 37,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "chapter": "Prologue: Moonlit Capriccio",
+      "volumes": [
+       20
+      ],
+      "query": "Julius Roy Alphard end"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3170,
+      "completion_tokens": 15,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 20
+     },
+     "new_passages": []
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 3324,
+      "completion_tokens": 31,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "Julius Roy Alphard swallowed eaten name memory Volume 20",
+      "volumes": [
+       20
+      ]
+     },
+     "new_passages": [
+      6,
+      6
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 3790,
+      "completion_tokens": 30,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "query": "Julius Roy Alphard end of fight Volume 20",
+      "volumes": [
+       20
+      ]
+     },
+     "new_passages": [
+      7,
+      8
+     ]
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 4701,
+      "completion_tokens": 110,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    6508,
+    6510,
+    6516,
+    6515,
+    6507,
+    6768,
+    6511,
+    6517
+   ],
+   "cited_refs": [
+    1,
+    5,
+    6,
+    8
+   ],
+   "judge_usage": {
+    "completion_tokens": 54,
+    "prompt_tokens": 2110,
+    "total_tokens": 2164
+   },
+   "gold_context_ranks": [
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer covers all the required key points accurately and every single claim is fully supported by the provided text passages."
+  },
+  {
+   "id": "fact-35",
+   "category": "fact",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the reason Subaru's group sets out for the Pleiades Watchtower is not explicitly detailed. However, the passages mention that the watchtower was supposedly made to keep watch on the shrine where the Witch of Jealousy is said to be sealed [1]. \n\nTo cross the Auguria Dunes, they plan to use a secret path known by Anastasia (Foxidna), who claims to possess a secret route that brings them to the Sage's watchtower [2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 102,
+    "prompt_tokens": 2347,
+    "total_tokens": 2449
+   },
+   "timings_ms": {
+    "retrieval": 113,
+    "llm": 1620
+   },
+   "context_chunk_ids": [
+    6943,
+    6838,
+    6915,
+    7104,
+    7066,
+    6942
+   ],
+   "cited_refs": [
+    1,
+    2
+   ],
+   "judge_usage": {
+    "completion_tokens": 87,
+    "prompt_tokens": 1319,
+    "total_tokens": 1406
+   },
+   "gold_context_ranks": [
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.3333333333333333,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system correctly explains how they plan to cross the dunes using Anastasia's secret path (supported by the text), but fails to state why they are going to the watchtower, claiming it is not explicitly detailed in the passages."
+  },
+  {
+   "id": "rel-01",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Ram and Rem are twin sisters [1][5]. Ram is the older twin, and Rem is the younger twin [5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 26,
+    "prompt_tokens": 2304,
+    "total_tokens": 2330
+   },
+   "timings_ms": {
+    "retrieval": 54,
+    "llm": 1336
+   },
+   "context_chunk_ids": [
+    883,
+    884,
+    1491,
+    1637,
+    882,
+    3260
+   ],
+   "cited_refs": [
+    1,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 62,
+    "prompt_tokens": 1248,
+    "total_tokens": 1310
+   },
+   "gold_context_ranks": [
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately states that Ram and Rem are twin sisters and that Ram is the older twin, which matches both the reference answer and the cited passages."
+  },
+  {
+   "id": "rel-02",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Wilhelm van Astrea's wife was Theresia van Astrea (the previous Sword Saint) [6]. Before marrying into the Astrea family, his surname was Trias [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 39,
+    "prompt_tokens": 2366,
+    "total_tokens": 2405
+   },
+   "timings_ms": {
+    "retrieval": 45,
+    "llm": 1443
+   },
+   "context_chunk_ids": [
+    2079,
+    2102,
+    2112,
+    2111,
+    6696,
+    1917
+   ],
+   "cited_refs": [
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 77,
+    "prompt_tokens": 798,
+    "total_tokens": 875
+   },
+   "gold_context_ranks": [
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Theresia van Astrea as the previous Sword Saint and Trias as Wilhelm's former surname, matching all key points and referencing the correct text accurately."
+  },
+  {
+   "id": "rel-03",
+   "category": "relationship",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Reinhard van Astrea is the grandson of Wilhelm and Theresia [1]. His parents are Heinkel (Wilhelm and Theresia's son) and Louanna [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 42,
+    "prompt_tokens": 2212,
+    "total_tokens": 2254
+   },
+   "timings_ms": {
+    "retrieval": 46,
+    "llm": 1092
+   },
+   "context_chunk_ids": [
+    6688,
+    6703,
+    6702,
+    6698,
+    6696,
+    2111
+   ],
+   "cited_refs": [
+    1
+   ],
+   "judge_usage": {
+    "completion_tokens": 68,
+    "prompt_tokens": 753,
+    "total_tokens": 821
+   },
+   "gold_context_ranks": [
+    1
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately identifies Reinhard as the grandson of Wilhelm and Theresia and correctly lists his parents as Heinkel and Louanna, all of which are explicitly stated in the cited passage."
+  },
+  {
+   "id": "rel-04",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Frederica and Garfiel are older sister and younger brother (siblings) [1][3][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 23,
+    "prompt_tokens": 2548,
+    "total_tokens": 2571
+   },
+   "timings_ms": {
+    "retrieval": 33,
+    "llm": 1531
+   },
+   "context_chunk_ids": [
+    4682,
+    4679,
+    3367,
+    4831,
+    3725,
+    5642
+   ],
+   "cited_refs": [
+    1,
+    3,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 76,
+    "prompt_tokens": 1596,
+    "total_tokens": 1672
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies them as older sister and younger brother, but misses the key point that they do not get along well. All claims are supported by the cited passages."
+  },
+  {
+   "id": "rel-05",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Beatrice is like a daughter to Echidna (or her daughter) [1], and Echidna is deeply related to her birth [6]. Echidna also made a pact with Beatrice that tied her to the mansion, leading Beatrice to wait all this time for \"That Person\" to arrive [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 64,
+    "prompt_tokens": 2196,
+    "total_tokens": 2260
+   },
+   "timings_ms": {
+    "retrieval": 40,
+    "llm": 1291
+   },
+   "context_chunk_ids": [
+    4395,
+    4432,
+    5031,
+    5030,
+    4396,
+    3951
+   ],
+   "cited_refs": [
+    1,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 92,
+    "prompt_tokens": 1299,
+    "total_tokens": 1391
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Beatrice's relationship to Echidna (as a daughter/like a daughter) and mentions the pact and 'That Person', but it completely misses the task Echidna left her (to guard the archive of forbidden books) and the duration of 400 years."
+  },
+  {
+   "id": "rel-06",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the knights of the candidates for the royal selection are:\n\n* **Crusch Karsten:** Felix Argyle (the Blue Knight) [4]\n* **Priscilla Bariel:** Al (the one-armed wanderer from another world) [4]\n* **Anastasia Hoshin:** Julius Juukulius (the Finest of Knights) [4]\n* **Emilia:** Lacking a knight of her own [3], though Subaru Natsuki is her self-declared knight [2][6].\n* **Felt:** Reinhard van Astrea (the Sword Saint) [4]",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 129,
+    "prompt_tokens": 2276,
+    "total_tokens": 2405
+   },
+   "timings_ms": {
+    "retrieval": 56,
+    "llm": 1480
+   },
+   "context_chunk_ids": [
+    1144,
+    1220,
+    1173,
+    1219,
+    1194,
+    1193
+   ],
+   "cited_refs": [
+    2,
+    3,
+    4,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 71,
+    "prompt_tokens": 1883,
+    "total_tokens": 1954
+   },
+   "gold_context_ranks": [
+    2,
+    4
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately identifies the knights for each of the royal candidates based on the text, and every claim is directly backed up by the provided passages."
+  },
+  {
+   "id": "rel-07",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Joshua Juukulius is Julius’s younger brother [6]. \n\nRegarding why Julius does not remember him, the provided passages do not contain enough information to explain why Julius does not remember Joshua (they only mention that Echidna and Reid forgot or had trouble remembering Julius, but do not state why Julius forgot or failed to remember his brother).",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 70,
+    "prompt_tokens": 2033,
+    "total_tokens": 2103
+   },
+   "timings_ms": {
+    "retrieval": 38,
+    "llm": 1527
+   },
+   "context_chunk_ids": [
+    8299,
+    8243,
+    7362,
+    8289,
+    8293,
+    5091
+   ],
+   "cited_refs": [
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 90,
+    "prompt_tokens": 877,
+    "total_tokens": 967
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system correctly identified Joshua as Julius's younger brother based on the text, but failed to explain why Julius does not remember him because that information was missing from the provided passage. The claims it did make are fully supported by the cited text."
+  },
+  {
+   "id": "rel-08",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Fortuna is Emilia's surrogate mother, who also described herself as a mother figure and the younger sister of Emilia's father [1][6]. \n\nIn Emilia's memories, Fortuna dies in the Great Elior Forest when Geuse, using Unseen Hands powered by a Witch Factor alongside Fortuna's own destruction, accidentally pierces Fortuna's chest with an invisible hand, bathing Emilia in her fresh blood [2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 88,
+    "prompt_tokens": 2198,
+    "total_tokens": 2286
+   },
+   "timings_ms": {
+    "retrieval": 56,
+    "llm": 1772
+   },
+   "context_chunk_ids": [
+    4336,
+    4536,
+    4530,
+    4534,
+    4361,
+    4337
+   ],
+   "cited_refs": [
+    1,
+    2,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 83,
+    "prompt_tokens": 1506,
+    "total_tokens": 1589
+   },
+   "gold_context_ranks": [
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately identifies Fortuna as Emilia's surrogate mother/mother figure and details her death by Geuse's Unseen Hand piercing her chest, both of which are fully supported by the cited passages."
+  },
+  {
+   "id": "rel-09",
+   "category": "relationship",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the name of Subaru's father is Kenichi Natsuki [2]. The passages do not contain the name of Subaru's mother [2].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 36,
+    "prompt_tokens": 2347,
+    "total_tokens": 2383
+   },
+   "timings_ms": {
+    "retrieval": 61,
+    "llm": 1405
+   },
+   "context_chunk_ids": [
+    3148,
+    3092,
+    4408,
+    2915,
+    3109,
+    3149
+   ],
+   "cited_refs": [
+    2
+   ],
+   "judge_usage": {
+    "completion_tokens": 89,
+    "prompt_tokens": 817,
+    "total_tokens": 906
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the father's name (Kenichi Natsuki) based on the passage, but misses the mother's name because it was not included in the provided text. The claims made are faithful to the cited passage."
+  },
+  {
+   "id": "rel-10",
+   "category": "relationship",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Old Man Rom is Felt's surrogate father and the only family she could trust wholeheartedly (also referred to by Rom as his \"grandbaby\") [3][6]. They are living at a mansion [2][3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 51,
+    "prompt_tokens": 2553,
+    "total_tokens": 2604
+   },
+   "timings_ms": {
+    "retrieval": 55,
+    "llm": 1697
+   },
+   "context_chunk_ids": [
+    10203,
+    10171,
+    10196,
+    10197,
+    10202,
+    10232
+   ],
+   "cited_refs": [
+    2,
+    3,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 80,
+    "prompt_tokens": 1646,
+    "total_tokens": 1726
+   },
+   "gold_context_ranks": [
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Rom's relationship to Felt and that they live in a mansion, but it fails to specify that the mansion belongs to the Astrea/Reinhard's family."
+  },
+  {
+   "id": "rel-11",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Beatrice forms a contract with Subaru [2]. To persuade her, Subaru says, “Beatrice—please save me” [1]. He also tells her that he can make her happier than some guy whose face she doesn’t even know [6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 52,
+    "prompt_tokens": 2493,
+    "total_tokens": 2545
+   },
+   "timings_ms": {
+    "retrieval": 68,
+    "llm": 1504
+   },
+   "context_chunk_ids": [
+    4950,
+    5035,
+    5002,
+    4915,
+    4912,
+    4998
+   ],
+   "cited_refs": [
+    1,
+    2,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 82,
+    "prompt_tokens": 1652,
+    "total_tokens": 1734
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Subaru and captures part of what he says to persuade her, but misses the crucial \"pick me\" instruction and the detail that she becomes his contracted spirit (though it implies the contract). All claims are supported by the cited passages."
+  },
+  {
+   "id": "rel-12",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Ram regards Roswaal as her lord and master, a man to whom she has given her soul [5]. She displays docility, adoration, and absolute loyalty toward him [1][2], stating that she is his as she has been since \"that fiery night\" [2], and serving him without asking anything in return [4]. Roswaal describes Ram and Rem as pawns, to which Ram responds with a docile and adoring nod [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 100,
+    "prompt_tokens": 2251,
+    "total_tokens": 2351
+   },
+   "timings_ms": {
+    "retrieval": 79,
+    "llm": 1522
+   },
+   "context_chunk_ids": [
+    951,
+    954,
+    950,
+    953,
+    955,
+    883
+   ],
+   "cited_refs": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 76,
+    "prompt_tokens": 1805,
+    "total_tokens": 1881
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately captures Ram's adoration, loyalty, and feelings toward Roswaal as depicted in the text, and every claim is strictly backed by the cited passages."
+  },
+  {
+   "id": "rel-13",
+   "category": "relationship",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages:\n\n* **Who Shaula is:** Shaula is the name of a star that is part of the constellation Scorpio [1][3], and she is associated with a giant black scorpion with multiple red eyes and a scorpiontail hairstyle [1][3][5]. She was given her name by her master [1]. She spent four hundred years watching the sands and sniping anyone who tried to approach the Pleiades Watchtower based on her master's orders [4]. She is also identified as one of the giant scorpions acting as an obstacle/threat that assaulted the tower, capable of killing people [3].\n* **Who she believes Subaru is:** She believes Subaru is her \"Master\" (Flugel) [2][4].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 156,
+    "prompt_tokens": 2535,
+    "total_tokens": 2691
+   },
+   "timings_ms": {
+    "retrieval": 47,
+    "llm": 1995
+   },
+   "context_chunk_ids": [
+    7236,
+    7206,
+    8007,
+    7199,
+    7204,
+    7233
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 87,
+    "prompt_tokens": 2551,
+    "total_tokens": 2638
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system correctly identifies who Shaula is and who she believes Subaru is (her master, Flugel, based on the context of the texts referencing Flugel and Master), and all stated details are directly supported by the cited passages."
+  },
+  {
+   "id": "rel-14",
+   "category": "relationship",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided texts, Emilia has a pact with the spirit Puck [3]. She also has formed pacts with lesser spirits [1, 5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 32,
+    "prompt_tokens": 2459,
+    "total_tokens": 2491
+   },
+   "timings_ms": {
+    "retrieval": 37,
+    "llm": 1121
+   },
+   "context_chunk_ids": [
+    5034,
+    4379,
+    4883,
+    2458,
+    345,
+    2469
+   ],
+   "cited_refs": [
+    1,
+    3,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 52,
+    "prompt_tokens": 1528,
+    "total_tokens": 1580
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Puck as the spirit contracted with Emilia, which is supported by the cited passages."
+  },
+  {
+   "id": "multi-01",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the locations and causes of Subaru's first three deaths are:\n\n* **First death:** Happens when he and Satella visit the loot cellar together [1]. The cause of death is wounds inflicted by a blade [2].\n* **Second death:** Happens when he, Rom, and Felt are all cut down by Elsa’s blade [1] (at the loot cellar, which is a place he had already been killed twice [5]). The cause of death is a blade [2].\n* **Third death:** Described as a dog's death where he was killed by weak mob characters while still in the prologue [1]. Specifically, his guts are damaged by a knife pushed into his back by the giant (\"Dumb\") [4][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 162,
+    "prompt_tokens": 2607,
+    "total_tokens": 2769
+   },
+   "timings_ms": {
+    "retrieval": 94,
+    "llm": 1773
+   },
+   "context_chunk_ids": [
+    182,
+    194,
+    181,
+    195,
+    208,
+    176
+   ],
+   "cited_refs": [
+    1,
+    2,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 85,
+    "prompt_tokens": 2631,
+    "total_tokens": 2716
+   },
+   "gold_context_ranks": [
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.3333333333333333,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system correctly identifies the locations and general causes for the three deaths using the text, but misses specific details present in the key points (such as the unseen attacker in the first death and Elsa cutting the abdomen in the second). All provided claims are supported by the citations."
+  },
+  {
+   "id": "multi-02",
+   "category": "multi_hop",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the Archbishops involved in each arc are as follows:\n\n* **Mathers Domain Arc:** The passages mention **Sloth** (claimed by Petelgeuse) [1][3]. The White Whale is also referred to as having been \"supposedly Gluttony\" [3]. \n* **Pristella Arc:** The passages confirm the presence of **Gluttony** [4], **Sirius** [6], and **Regulus** [6]. Additionally, it is noted that three Archbishops are confirmed inside the city [2][4], and given that five places (four control towers and city hall) were captured, it is considered possible that **Wrath, Greed, Lust, Gluttony, and Pride**—or potentially \"all the Archbishops\"—are in attendance [4]. \n\n*(Note: The passages do not provide a complete, exclusive list of every individual Archbishop present in each respective arc beyond these mentions.)*",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 207,
+    "prompt_tokens": 2534,
+    "total_tokens": 2741
+   },
+   "timings_ms": {
+    "retrieval": 123,
+    "llm": 2061
+   },
+   "context_chunk_ids": [
+    2173,
+    5598,
+    2174,
+    5737,
+    2166,
+    5583
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 127,
+    "prompt_tokens": 2653,
+    "total_tokens": 2780
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies Sloth for the Mathers domain arc based on the text, but for Pristella it only confirms Gluttony, Sirius, and Regulus as actually confirmed (listing Wrath, Greed, Lust, Gluttony, and Pride merely as a speculative possibility in the text), thereby missing Capella/Lust and giving an incomplete picture of the actual Archbishops present. However, the claims it does make are faithfully derived from the cited passages."
+  },
+  {
+   "id": "multi-03",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "In Volume 1, when Elsa attacks Subaru and Felt in the loot house, **Felt** saves Subaru by tackling him out of the path of Elsa's blade [1]. \n\nRegarding who kills Elsa and when: Elsa is **not** killed in Volume 1. Although she fights Reinhard van Astrea and sustains heavy injuries, she manages to survive her final desperate attack [19] and escape from the loot house [3].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 40658,
+    "prompt_tokens": 40411,
+    "completion_tokens": 247
+   },
+   "timings_ms": {
+    "retrieval": 364,
+    "llm": 13166
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1026,
+      "completion_tokens": 48,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Elsa Subaru Felt stop kill"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Elsa kills who when Volume 1"
+     },
+     "new_passages": [
+      6,
+      10
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 5059,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Reinhard kills Elsa Volume 1"
+     },
+     "new_passages": [
+      11,
+      13
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 6345,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Elsa death Volume 1 survived killed later"
+     },
+     "new_passages": [
+      14,
+      17
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 8010,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "Elsa defeated Reinhard loot house Volume 1",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      18,
+      18
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 8498,
+      "completion_tokens": 26,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "query": "Elsa escapes flees Volume 1 Reinhard",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      19,
+      19
+     ]
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 8988,
+      "completion_tokens": 90,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    147,
+    152,
+    214,
+    153,
+    233,
+    281,
+    276,
+    287,
+    265,
+    183,
+    284,
+    291,
+    282,
+    151,
+    186,
+    160,
+    182,
+    285,
+    297
+   ],
+   "cited_refs": [
+    1,
+    3,
+    19
+   ],
+   "judge_usage": {
+    "completion_tokens": 100,
+    "prompt_tokens": 1687,
+    "total_tokens": 1787
+   },
+   "gold_context_ranks": [
+    12
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.5,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly states that Elsa is not killed in Volume 1, but it fails to answer who stops her in Volume 1 and who finally kills her and when (Volume 15), as those facts are not contained in the provided text snippets. However, the claims it *does* make are fully supported by the cited passages."
+  },
+  {
+   "id": "multi-04",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Originally, Theresia van Astrea did not die during her first battle because she refused to fight [9], but she later died during the battle against the White Whale [11], where Wilhelm fought and defeated her/the beast (though Wilhelm spent years grieving her loss, believing his inability to reach her played a part) [8, 11]. \n\nIn Pristella, her corpse was utilized during the defense/battle where she appeared as an opponent, and her final moment left scars on the Astrea family before Wilhelm gathered her ashes [6, 18].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 33386,
+    "prompt_tokens": 33141,
+    "completion_tokens": 245
+   },
+   "timings_ms": {
+    "retrieval": 301,
+    "llm": 11473
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 7,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1018,
+      "completion_tokens": 39,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Theresia van Astrea originally die"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Theresia Pristella re zero"
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 4051,
+      "completion_tokens": 20,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Theresia white whale death re zero"
+     },
+     "new_passages": [
+      10,
+      13
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 5383,
+      "completion_tokens": 20,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Theresia died white whale re zero"
+     },
+     "new_passages": [
+      14,
+      14
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5892,
+      "completion_tokens": 22,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "Theresia van Astrea Pristella re zero"
+     },
+     "new_passages": [
+      15,
+      15
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 6354,
+      "completion_tokens": 20,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 5,
+     "tool": "search",
+     "args": {
+      "query": "Theresia corpse pandora re zero"
+     },
+     "new_passages": [
+      16,
+      20
+     ]
+    },
+    {
+     "step": 6,
+     "llm": {
+      "prompt_tokens": 8394,
+      "completion_tokens": 117,
+      "finish_reason": "stop",
+      "forced": true
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    6654,
+    6676,
+    6695,
+    6688,
+    6658,
+    6705,
+    6662,
+    6689,
+    6663,
+    2078,
+    2111,
+    2072,
+    2045,
+    2069,
+    6682,
+    4529,
+    4511,
+    6702,
+    4545,
+    4544
+   ],
+   "cited_refs": [
+    6,
+    8,
+    9,
+    11,
+    18
+   ],
+   "judge_usage": {
+    "completion_tokens": 165,
+    "prompt_tokens": 2247,
+    "total_tokens": 2412
+   },
+   "gold_context_ranks": [
+    18
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.25,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "partially_supported",
+   "unsupported_claims": [
+    "Reinhard cut her down is not mentioned in the cited text (though Wilhelm and Heinkel are mentioned, Reinhard's action of cutting her down is missing from the provided passages).",
+    "Wilhelm fought and defeated her/the beast (the text shows Wilhelm weeping on top of the Whale after she died, not defeating her/the beast as an opponent in that context)"
+   ],
+   "judge_explanation": "The system answer misses the key point that Reinhard cut her down in Pristella (which is omitted from the cited text). Additionally, the faithfulness is partially supported because the claim about Reinhard cutting her down and the details of the White Whale fight are not found in the provided passages."
+  },
+  {
+   "id": "multi-05",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "After the battle against the White Whale, while traveling with Crusch's forces, Rem was ambushed by the Witch Cult Archbishops Regulus Corneas (Greed) and Lye Batenkaitos (Gluttony) [8, 11]. \n\nDuring the ensuing conflict, Rem was attacked by Gluttony [6]. As a result, she fell into a deep, unawakening sleep known as the \"Sleeping Princess\" state—where she did not age, hunger, or wake despite any treatment [9]. Furthermore, she was completely erased from the memories of everyone around her, leaving only Subaru to remember her [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 21503,
+    "prompt_tokens": 21248,
+    "completion_tokens": 255
+   },
+   "timings_ms": {
+    "retrieval": 284,
+    "llm": 18125
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 6,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1011,
+      "completion_tokens": 28,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       8,
+       9
+      ],
+      "query": "Rem White Whale battle after injury coma memory erased"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2980,
+      "completion_tokens": 29,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Rem coma attacked Gluttony after White Whale Volume 9",
+      "volumes": [
+       9
+      ]
+     },
+     "new_passages": [
+      6,
+      8
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4305,
+      "completion_tokens": 28,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Rem memory eaten coma unconscious after white whale volume 9",
+      "volumes": [
+       9
+      ]
+     },
+     "new_passages": []
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 4388,
+      "completion_tokens": 29,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "Rem eaten name memory gluttony sleeping coma volume 9",
+      "volumes": [
+       9
+      ]
+     },
+     "new_passages": [
+      9,
+      12
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 6054,
+      "completion_tokens": 134,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    2821,
+    2331,
+    2795,
+    2228,
+    2198,
+    2805,
+    2806,
+    2792,
+    2822,
+    2807,
+    2804,
+    2808
+   ],
+   "cited_refs": [
+    1,
+    6,
+    8,
+    9,
+    11
+   ],
+   "judge_usage": {
+    "completion_tokens": 54,
+    "prompt_tokens": 2571,
+    "total_tokens": 2625
+   },
+   "gold_context_ranks": [
+    1,
+    9,
+    11
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 1.0,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately describes what happened to Rem based on the text and all facts are supported by the provided citations."
+  },
+  {
+   "id": "multi-06",
+   "category": "multi_hop",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, Gluttony's victims are affected in different ways:\n\n* **Crusch:** Had her memories stolen, causing her to forget herself [1][5]. \n* **Rem:** Had both her name and memories stolen [1], causing her to be forgotten by the people around her and wake up with no memories [5].\n* **Julius:** Only had his name stolen [1], meaning he was forgotten by everyone else [1][3], but he was still conscious and could remember himself [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 112,
+    "prompt_tokens": 2187,
+    "total_tokens": 2299
+   },
+   "timings_ms": {
+    "retrieval": 41,
+    "llm": 1410
+   },
+   "context_chunk_ids": [
+    6768,
+    5774,
+    8434,
+    6174,
+    8499,
+    6176
+   ],
+   "cited_refs": [
+    1,
+    3,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 72,
+    "prompt_tokens": 1464,
+    "total_tokens": 1536
+   },
+   "gold_context_ranks": [
+    1,
+    5
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.6666666666666666,
+   "cited_gold": true,
+   "verdict": "correct",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately captures the distinct effects of Gluttony on Crusch, Rem, and Julius according to both the reference requirements and the cited passages."
+  },
+  {
+   "id": "multi-07",
+   "category": "multi_hop",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Based on the provided passages, the Witches mentioned as participating in or crashing the tea parties and the sins they represent are:\n\n* **Echidna**: Witch of Greed [4, 6]\n* **Carmilla**: Lust [2, 5]\n* **Sekhmet**: Sloth [5, 6]\n* **Gluttony** [5]\n* **Pride** [5]\n* **Wrath** [5]\n\n*(Note: The passages mention Gluttony, Pride, and Wrath as present/joining [5], but do not explicitly name individual witches for those three sins other than listing the sins and Greed, Lust, and Sloth [5].)*",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 148,
+    "prompt_tokens": 2517,
+    "total_tokens": 2665
+   },
+   "timings_ms": {
+    "retrieval": 48,
+    "llm": 1879
+   },
+   "context_chunk_ids": [
+    3919,
+    3910,
+    3493,
+    3950,
+    3938,
+    3491
+   ],
+   "cited_refs": [
+    2,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 69,
+    "prompt_tokens": 2139,
+    "total_tokens": 2208
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the Witches and sins mentioned in the passages, but fails to map all individual names to their respective sins because the cited text itself only explicitly pairs some of them."
+  },
+  {
+   "id": "multi-08",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 16010,
+    "prompt_tokens": 15883,
+    "completion_tokens": 127
+   },
+   "timings_ms": {
+    "retrieval": 202,
+    "llm": 12925
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1022,
+      "completion_tokens": 48,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Archbishop killed captured Pristella Sirius Regulus Capella Lye Roy Petelgeuse",
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2865,
+      "completion_tokens": 33,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Regulus dead Lye Roy Gluttony Capella captured killed Pristella",
+      "volumes": [
+       20
+      ]
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4385,
+      "completion_tokens": 32,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Regulus dead killed Lye Roy Capella captured Sirius captured Pristella",
+      "volumes": [
+       20
+      ]
+     },
+     "new_passages": [
+      10,
+      11
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5290,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    5585,
+    6731,
+    6730,
+    5887,
+    5547,
+    6733,
+    6537,
+    6586,
+    6706,
+    6727,
+    6734
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "refused"
+  },
+  {
+   "id": "multi-09",
+   "category": "multi_hop",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "From their brutal public duel in Volume 4—where Julius thoroughly beat a reckless and hostile Subaru to teach him his place—their relationship gradually shifts [2][9]. \n\nBy the time they reunite in Pristella (Volume 16), they have technically \"made up\" [9], and Emilia even remarks that they get along well now [10]. However, Subaru remains stubbornly resentful and easily irritated by Julius's smugness and habit of lecturing him [7][9], frequently calling him a \"pain in my butt\" [7]. Julius, for his part, maintains a composed, sometimes teasing demeanor, though he also looks out for Subaru and acknowledges his growth. Following the battles in Pristella, their bond deepens further into genuine mutual respect and camaraderie, to the point where Emilia and Beatrice recognize Julius as a friend of Subaru's [8].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 8764,
+    "prompt_tokens": 8523,
+    "completion_tokens": 241
+   },
+   "timings_ms": {
+    "retrieval": 198,
+    "llm": 4910
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1022,
+      "completion_tokens": 57,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       4
+      ],
+      "query": "Subaru Julius duel"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ],
+      "query": "Subaru Julius relationship Pristella"
+     },
+     "new_passages": [
+      6,
+      10
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 4995,
+      "completion_tokens": 177,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1230,
+    1238,
+    1232,
+    1240,
+    1231,
+    5172,
+    5185,
+    6750,
+    5103,
+    5174
+   ],
+   "cited_refs": [
+    2,
+    7,
+    8,
+    9,
+    10
+   ],
+   "judge_usage": {
+    "completion_tokens": 79,
+    "prompt_tokens": 2452,
+    "total_tokens": 2531
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly tracks their relationship evolution into Pristella, but misses the crucial post-Pristella detail where Gluttony erases Julius's name and only Subaru remembers him."
+  },
+  {
+   "id": "sum-01",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Natsuki Subaru is abruptly summoned to a fantasy royal capital. Shortly after arriving, he is attacked by thugs, but a silver-haired half-elf girl named Satella (later revealing her real name is Emilia) saves him along with her spirit cat, Puck. To repay her, Subaru helps search for her stolen insignia (badge).\n\nDiscovering the badge is at a loot house in the slums, Subaru arrives only to find Emilia and the others brutally murdered by the assassin Elsa \"The Bowel Hunter\" [1][4]. This triggers Subaru’s ability, \"Return by Death,\" sending him back in time. After repeating the loop several times and dying repeatedly, Subaru teams up with the knight Reinhard van Astrea to infiltrate the loot house and protect Emilia, Felt, and Rom [1][5][10]. Reinhard defeats Elsa in a fierce battle, saving everyone, and the volume concludes with Subaru waking up safely alongside Emilia [10].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 13301,
+    "prompt_tokens": 13035,
+    "completion_tokens": 266
+   },
+   "timings_ms": {
+    "retrieval": 158,
+    "llm": 8241
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1012,
+      "completion_tokens": 14,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 1
+     },
+     "new_passages": []
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 1143,
+      "completion_tokens": 25,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Subaru summoned convenience store Elsa stolen insignia",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3136,
+      "completion_tokens": 28,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       1
+      ],
+      "query": "Emilia Reinhard beat Elsa loot house conclusion volume 1"
+     },
+     "new_passages": [
+      6,
+      10
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5241,
+      "completion_tokens": 192,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    186,
+    184,
+    146,
+    183,
+    203,
+    284,
+    291,
+    287,
+    282,
+    308
+   ],
+   "cited_refs": [
+    1,
+    4,
+    5,
+    10
+   ],
+   "judge_usage": {
+    "completion_tokens": 135,
+    "prompt_tokens": 2258,
+    "total_tokens": 2393
+   },
+   "gold_context_ranks": [
+    7
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.2,
+   "cited_gold": false,
+   "verdict": "correct",
+   "faithfulness": "partially_supported",
+   "unsupported_claims": [
+    "Natsuki Subaru is abruptly summoned to a fantasy royal capital.",
+    "attacked by thugs, but a silver-haired half-elf girl named Satella (later revealing her real name is Emilia) saves him along with her spirit cat, Puck."
+   ],
+   "judge_explanation": "The correctness is correct as it hits all key points of the volume. However, the faithfulness is partially supported because the first paragraph and some details rely on outside knowledge of Re:ZERO not found in the provided citations [1][4][5][10]."
+  },
+  {
+   "id": "sum-02",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "At Roswaal Manor, Subaru experiences time loops triggered by death (Return by Death) [1][6]. In his attempts to clear the manor level, he encounters two major obstacles: winning the trust of everyone living there (including Ram, Rem, and Roswaal) to avoid being murdered by the twins, and bringing down an unknown, evil shaman attacking the manor [1]. \n\nInitially, Subaru plans to redo everything the same way to reach the conclusion he desires, charming his way into becoming an apprentice servant [2, 4]. However, the details of his training and duties change, causing his plan to go off the rails [2]. After experiencing deaths and resets, he eventually decides to take a different approach [3]. By his fifth crack at the manor, he still lacks solid leads on the shaman and needs to fulfill the requirements of earning the twins' trust and dealing with the magic user [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 187,
+    "prompt_tokens": 2402,
+    "total_tokens": 2589
+   },
+   "timings_ms": {
+    "retrieval": 87,
+    "llm": 1991
+   },
+   "context_chunk_ids": [
+    650,
+    461,
+    527,
+    460,
+    392,
+    453
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 92,
+    "prompt_tokens": 2511,
+    "total_tokens": 2603
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly summarizes the provided text about the time loops and obstacles at the manor, but it misses several key points from the reference answer (such as Rem killing him with a morning star, the puppy/demon beast curse, and saving the children)."
+  },
+  {
+   "id": "sum-03",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "The expeditionary force fights the White Whale, inflicting significant damage—including losing its left eye—through attacks from Ricardo and the Iron Fangs riding ligers, magic crystal cannons, and Wilhelm's swordsmanship [1][2][3][4]. Despite taking enough damage to kill a normal demon beast many times over, the White Whale possesses extreme endurance [3][5]. In response to the attacks, the White Whale undergoes a gruesome change, opening countless cavities and mouths across its body that emit a twisted, repulsive sound and spew an immense amount of mist that blots out the plains [2][3][6]. The sound causes primal fear in the mounts and leaves the expeditionary force defenseless, but fighters like Ricardo, Wilhelm, and Rem continue to evade the mist, land attacks, and use ice magic, though the beast's movements remain largely unstopped [4][5][6].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 182,
+    "prompt_tokens": 2377,
+    "total_tokens": 2559
+   },
+   "timings_ms": {
+    "retrieval": 54,
+    "llm": 2194
+   },
+   "context_chunk_ids": [
+    1994,
+    2003,
+    2005,
+    2028,
+    2026,
+    2004
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 108,
+    "prompt_tokens": 2854,
+    "total_tokens": 2962
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer accurately describes the ongoing battle details present in the text, but misses the broader context and resolution of the fight specified in the key points (such as the alliance with Crusch, felling the Great Flugel Tree, and Wilhelm killing the whale to avenge Theresia). All included claims are supported by the provided text citations."
+  },
+  {
+   "id": "sum-04",
+   "category": "summary",
+   "split": "test",
+   "oos_type": null,
+   "answer": "The Sanctuary arc (Volumes 10–15) follows Subaru and his companions as they travel to the Sanctuary—a domain tied to Emilia’s heritage and sealed by a barrier—to rescue Roswaal [1][2]. There, they become trapped because of the barrier and face multiple intertwined crises: Roswaal's manipulation and his book of knowledge, the fierce opposition of the half-blood youth Garfiel, the assassin Elsa attacking the mansion, and the impending arrival of the Great Rabbit horde [1][2][3]. \n\nUsing his ability \"Return by Death,\" Subaru endures repeated loops of despair, attends tea parties hosted by the Witches of Sin—including Echidna—and confronts his own past and emotional weaknesses [1][3][5]. He ultimately gains allies by befriending and overcoming Garfiel, helping Emilia face and pass the trials required to lift the barrier, and rallying his friends to defeat Elsa at the mansion and the Great Rabbit at the Sanctuary, ultimately saving the settlement and uniting its people [2][4].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 8473,
+    "prompt_tokens": 8169,
+    "completion_tokens": 304
+   },
+   "timings_ms": {
+    "retrieval": 155,
+    "llm": 6257
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 4,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1013,
+      "completion_tokens": 30,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 10
+     },
+     "new_passages": []
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 15
+     },
+     "new_passages": []
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 1344,
+      "completion_tokens": 50,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "query": "Sanctuary trials Subaru Echidna Roswaal Garfiel Elsa Great Rabbit"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3413,
+      "completion_tokens": 217,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    3522,
+    4021,
+    3841,
+    4968,
+    3519
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 120,
+    "prompt_tokens": 2672,
+    "total_tokens": 2792
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "partially_supported",
+   "unsupported_claims": [
+    "Garfield finally kills Elsa",
+    "Beatrice leaves her archive and contracts with Subaru",
+    "Emilia clears the Trials and the barrier is lifted",
+    "defeating Elsa at the mansion"
+   ],
+   "judge_explanation": "The system answer is missing several key points required by the prompt (such as Beatrice's contract and Garfiel killing Elsa) and includes multiple claims about Elsa, Garfiel, and Beatrice that are not supported by the specific passages cited."
+  },
+  {
+   "id": "sum-05",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "The Witch Cult—led by four Archbishops of the Seven Deadly Sins: Sirius (Wrath), Regulus (Greed), Capella (Lust), and Lye/Alphard (Gluttony)—launched a surprise attack on the water gate city of Pristella [1, 3, 9]. \n\nThe cult seized the city's four cardinal control towers, threatening to submerge the population of one hundred thousand if their demands were not met [1, 5, 6]. Their targets and demands included the city's control [5], a wedding with the silver-haired maiden (Emilia) [6], and various other items [6]. Subaru, Emilia, and their allies—alongside other candidates for the royal selection—confronted the Archbishops, ultimately fighting to liberate the city and overcome the terrifying and diverse Authorities of the Cult [9].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 10970,
+    "prompt_tokens": 10699,
+    "completion_tokens": 271
+   },
+   "timings_ms": {
+    "retrieval": 161,
+    "llm": 6281
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 4,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1023,
+      "completion_tokens": 37,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ],
+      "query": "Witch Cult Pristella attack summary"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2792,
+      "completion_tokens": 43,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Archbishops Pristella Sirius Regulus Capella Lye Louis",
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ]
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4473,
+      "completion_tokens": 184,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    5598,
+    6728,
+    5585,
+    5586,
+    5597,
+    5887,
+    6731,
+    6730,
+    5795
+   ],
+   "cited_refs": [
+    1,
+    3,
+    5,
+    6,
+    9
+   ],
+   "judge_usage": {
+    "completion_tokens": 113,
+    "prompt_tokens": 2365,
+    "total_tokens": 2478
+   },
+   "gold_context_ranks": [
+    3
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.14285714285714285,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer correctly identifies the four Archbishops involved in the attack based on the text, but misses several major outcomes of the arc (such as the fates of Regulus and Sirius, Julius's name being eaten, and Theresia's reanimation) because the provided passages only cover the beginning of the incident. However, all claims made in the system answer are strictly supported by the cited passages."
+  },
+  {
+   "id": "sum-06",
+   "category": "summary",
+   "split": "test",
+   "oos_type": null,
+   "answer": "The group traveled across the Auguria Dunes toward the Pleiades Watchtower, facing heavy miasma, the three-times-daily sandstorms known as \"sand time\" [3], and demon beasts. Upon arrival, they met the tower's eccentric guardian, Shaula, who revealed that the tower's true purpose is the Great Pleiades Library [6]. \n\nInside, the group encountered trials and unique floor names [9]. Subaru suffered from sudden memory loss upon entering [12]—forgetting his recent experiences in the world [13] while retaining his past personality—causing distress and confusion as he navigated the tower alongside Emilia, Beatrice, Julius, Ram, Meili, and Anastasia (who was secretly possessed/hidden by Echidna). While investigating the archives to understand his amnesia and find a way to save Rem [10, 11], Subaru experienced painful intrusions of conflicting memories [14] while Shaula watched closely [14].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 12077,
+    "prompt_tokens": 11720,
+    "completion_tokens": 357
+   },
+   "timings_ms": {
+    "retrieval": 210,
+    "llm": 7414
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 4,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1025,
+      "completion_tokens": 45,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 21
+     },
+     "new_passages": []
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 22
+     },
+     "new_passages": []
+    },
+    {
+     "step": 1,
+     "tool": "list_chapters",
+     "args": {
+      "volume": 23
+     },
+     "new_passages": []
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 1438,
+      "completion_tokens": 77,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Augusta sand dunes journey Shaula",
+      "volumes": [
+       21
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       22
+      ],
+      "query": "Pleiades watchtower rules trials Shaula"
+     },
+     "new_passages": [
+      6,
+      10
+     ]
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       23
+      ],
+      "query": "Ram memory loss Shaula Subaru loop"
+     },
+     "new_passages": [
+      11,
+      15
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 7218,
+      "completion_tokens": 201,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    6906,
+    6930,
+    6927,
+    6936,
+    6911,
+    7184,
+    7230,
+    7166,
+    7206,
+    7191,
+    7505,
+    7501,
+    7478,
+    7665,
+    7496
+   ],
+   "cited_refs": [
+    3,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "judge_usage": {
+    "completion_tokens": 94,
+    "prompt_tokens": 3684,
+    "total_tokens": 3778
+   },
+   "gold_context_ranks": [],
+   "gold_in_context": false,
+   "context_span_recall": 0.0,
+   "cited_gold": false,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer is faithful to the provided text passages, but it is missing several key elements required by the prompt's reference answer (such as the journey through the Auguria Dunes via secret route/Echidna, Reid Astrea fighting with chopsticks, and the specific goal regarding Rem/Gluttony victims)."
+  },
+  {
+   "id": "sum-07",
+   "category": "summary",
+   "split": "test",
+   "oos_type": null,
+   "answer": "Wilhelm and Theresia met in a flower garden, where Theresia eventually asked him why he swung his sword [5]. After they exchanged names, Wilhelm later told her he swung it to protect her, and asked her to live in peace raising flowers protected by his sword [2]. When Theresia asked if he loved him, Wilhelm averted his face and bluntly replied that she knew he did, later whispering \"Someday, when I feel like it\" when she said a woman wants to hear the words [2][3][6]. \n\nYears later, Wilhelm rushed to his homeland during a war and faced imminent death after being overwhelmed by an enemy army, remembering Theresia among others before surviving [4]. Decades later, atop the corpse of the defeated White Whale, Wilhelm finally voiced his love aloud to his departed wife, crying out, \"I love you—!!\" [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 179,
+    "prompt_tokens": 2191,
+    "total_tokens": 2370
+   },
+   "timings_ms": {
+    "retrieval": 75,
+    "llm": 2256
+   },
+   "context_chunk_ids": [
+    2111,
+    2107,
+    2108,
+    2098,
+    2090,
+    2109
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 89,
+    "prompt_tokens": 2697,
+    "total_tokens": 2786
+   },
+   "gold_context_ranks": [
+    1,
+    2,
+    3,
+    5,
+    6
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.6,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer covers some aspects of their relationship and the ending, but misses critical plot points from the reference answer, specifically that she is the Sword Saint and that he defeated her in a duel to take the sword from her. However, the claims made are fully supported by the cited passages."
+  },
+  {
+   "id": "sum-08",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Rem grew up in the shadow of her older sister, Ram, who was better at everything [6]. Rem realized she could never reach Ram's level, accepting her place cowering behind her sister [6]. Rem's homeland later became a sea of flames, destroying her world and killing her parents [1][5]. When black-robed figures approached to attack Rem, Ram saved her by decapitating them [5]. Later, they were surrounded, and as Ram unleashed her mana to protect Rem, a blow severed Ram's white horn [3][4]. Rem felt that her sister always chose the best option and wanted to leave everything to her, but could only watch as her sister took the blow [3][4]. Rem learned to recognize the scent of the witch from that tragedy and vowed to protect her home [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 170,
+    "prompt_tokens": 2031,
+    "total_tokens": 2201
+   },
+   "timings_ms": {
+    "retrieval": 59,
+    "llm": 1931
+   },
+   "context_chunk_ids": [
+    893,
+    894,
+    887,
+    888,
+    886,
+    884
+   ],
+   "cited_refs": [
+    1,
+    3,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 104,
+    "prompt_tokens": 2137,
+    "total_tokens": 2241
+   },
+   "gold_context_ranks": [
+    1,
+    4
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.6666666666666666,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer covers most of Rem's backstory from the interlude (Ram's superiority, the village burning, Ram shielding Rem and losing her horn), but misses the key point that twins were considered abominations in their village and how they ended up serving at Roswaal's mansion. All claims made by the system are supported by the provided citations."
+  },
+  {
+   "id": "sum-09",
+   "category": "summary",
+   "split": "dev",
+   "oos_type": null,
+   "answer": "Subaru Natsuki narrowly escapes death and realizes he has been sent flying across the southern border into the Holy Volakian Empire [1][3], one of the four major powers, where the strong do as they please and the weak endure [3]. Held prisoner in a wooden cage [2], he meets a masked man named Abel [1]. Subaru soon figures out that revealing he is from Lugunica is a bad idea [4], and he weighs his options to save Rem, ultimately choosing to put people in harm's way [2]. He also seals a bond of blood with the Shudrak [1], a tribe of women with a wild, instinct-driven air [5][6] who demand that Subaru and Abel identify themselves [6]. Meanwhile, a momentous political crisis has struck the empire involving Prime Minister Belstetz and traitorous Divine Generals, and Abel intends to reclaim his throne in the capital of Lupghana with Subaru accompanying him [1].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "completion_tokens": 196,
+    "prompt_tokens": 2048,
+    "total_tokens": 2244
+   },
+   "timings_ms": {
+    "retrieval": 84,
+    "llm": 2403
+   },
+   "context_chunk_ids": [
+    8776,
+    8703,
+    8590,
+    8591,
+    8698,
+    8699
+   ],
+   "cited_refs": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "judge_usage": {
+    "completion_tokens": 106,
+    "prompt_tokens": 2534,
+    "total_tokens": 2640
+   },
+   "gold_context_ranks": [
+    2
+   ],
+   "gold_in_context": true,
+   "context_span_recall": 0.25,
+   "cited_gold": true,
+   "verdict": "partial",
+   "faithfulness": "supported",
+   "unsupported_claims": [],
+   "judge_explanation": "The system answer covers some aspects of the beginning of the empire arc (finding himself in Volakia, meeting Abel and the Shudrak, Abel's identity and goal), but misses key points from the reference answer such as Rem waking up with no memories and Subaru disguising himself as Natsumi Schwartz. All claims made by the system are supported by the cited passages."
+  },
+  {
+   "id": "oos-01",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "general",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 3344,
+    "prompt_tokens": 3330,
+    "completion_tokens": 14
+   },
+   "timings_ms": {
+    "retrieval": 26,
+    "llm": 3011
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 2,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1006,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-02",
+   "category": "out_of_scope",
+   "split": "test",
+   "oos_type": "general",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 3222,
+    "prompt_tokens": 3208,
+    "completion_tokens": 14
+   },
+   "timings_ms": {
+    "retrieval": 44,
+    "llm": 2613
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 2,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1012,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-03",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "general",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 3529,
+    "prompt_tokens": 3515,
+    "completion_tokens": 14
+   },
+   "timings_ms": {
+    "retrieval": 51,
+    "llm": 2763
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 2,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1011,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-04",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "not_in_text",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 5448,
+    "prompt_tokens": 5417,
+    "completion_tokens": 31
+   },
+   "timings_ms": {
+    "retrieval": 88,
+    "llm": 4043
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1013,
+      "completion_tokens": 17,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "voice actress of Rem"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2731,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    10005,
+    8466,
+    9991,
+    9988,
+    9514
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-05",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "not_in_text",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 5930,
+    "prompt_tokens": 5899,
+    "completion_tokens": 31
+   },
+   "timings_ms": {
+    "retrieval": 134,
+    "llm": 4637
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1007,
+      "completion_tokens": 17,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru favorite Pokemon"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2584,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1841,
+    8129,
+    3583,
+    509,
+    683
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-06",
+   "category": "out_of_scope",
+   "split": "test",
+   "oos_type": "not_in_text",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6387,
+    "prompt_tokens": 6355,
+    "completion_tokens": 32
+   },
+   "timings_ms": {
+    "retrieval": 122,
+    "llm": 3632
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1012,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru mother disappeared Japan"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2941,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    3128,
+    7466,
+    4121,
+    3127,
+    3133
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-07",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "false_premise",
+   "answer": "The premise of the question is false: Emilia did not become an Archbishop of the Witch Cult. Instead, she was targeted by the Archbishop of Greed, Regulus Corneas, who demanded a wedding with her [2, 5].",
+   "found": true,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6229,
+    "prompt_tokens": 6154,
+    "completion_tokens": 75
+   },
+   "timings_ms": {
+    "retrieval": 152,
+    "llm": 4476
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1010,
+      "completion_tokens": 20,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Emilia Archbishop of the Witch Cult"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2836,
+      "completion_tokens": 48,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    5886,
+    4456,
+    5585,
+    2173,
+    5887
+   ],
+   "cited_refs": [
+    2,
+    5
+   ],
+   "judge_usage": {
+    "completion_tokens": 45,
+    "prompt_tokens": 259,
+    "total_tokens": 304
+   },
+   "verdict": "corrected_premise",
+   "judge_explanation": "The system answer explicitly points out that the premise of the question is false because Emilia never became an Archbishop of the Witch Cult."
+  },
+  {
+   "id": "oos-08",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6305,
+    "prompt_tokens": 6271,
+    "completion_tokens": 34
+   },
+   "timings_ms": {
+    "retrieval": 124,
+    "llm": 5260
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1014,
+      "completion_tokens": 20,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Rem cut off Ram horn village attacked"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2943,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    846,
+    8318,
+    8333,
+    876,
+    8345
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-09",
+   "category": "out_of_scope",
+   "split": "test",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 10791,
+    "prompt_tokens": 10735,
+    "completion_tokens": 56
+   },
+   "timings_ms": {
+    "retrieval": 263,
+    "llm": 7552
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 4,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1011,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Beatrice die White Whale"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3010,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Beatrice die White Whale volumes 1-28"
+     },
+     "new_passages": [
+      6,
+      8
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4232,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1992,
+    1713,
+    1728,
+    1994,
+    2027,
+    1722,
+    2026,
+    1721
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-10",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 12979,
+    "prompt_tokens": 12855,
+    "completion_tokens": 124
+   },
+   "timings_ms": {
+    "retrieval": 187,
+    "llm": 9393
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1010,
+      "completion_tokens": 37,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ],
+      "query": "Archbishop of Pride Pristella Subaru"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2584,
+      "completion_tokens": 36,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Archbishop of Pride Pristella",
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ]
+     },
+     "new_passages": [
+      6,
+      7
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3436,
+      "completion_tokens": 37,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "volumes": [
+       16,
+       17,
+       18,
+       19,
+       20
+      ],
+      "query": "Archbishop of Pride defeat Pristella"
+     },
+     "new_passages": []
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 3528,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    5585,
+    6724,
+    6722,
+    5583,
+    5147,
+    5737,
+    5887
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-11",
+   "category": "out_of_scope",
+   "split": "test",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 19428,
+    "prompt_tokens": 19293,
+    "completion_tokens": 135
+   },
+   "timings_ms": {
+    "retrieval": 316,
+    "llm": 9784
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 6,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1015,
+      "completion_tokens": 22,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Puck contract Subaru Emilia",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2699,
+      "completion_tokens": 24,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Puck contract Subaru Volume 1",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      6,
+      7
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3556,
+      "completion_tokens": 23,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "contract Puck Subaru Volume 1",
+      "volumes": [
+       1
+      ]
+     },
+     "new_passages": [
+      8,
+      8
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 4013,
+      "completion_tokens": 52,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 4,
+     "tool": "search",
+     "args": {
+      "query": "contract Puck Subaru",
+      "volumes": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ]
+     },
+     "new_passages": [
+      9,
+      13
+     ]
+    },
+    {
+     "step": 5,
+     "llm": {
+      "prompt_tokens": 5799,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    41,
+    60,
+    255,
+    48,
+    71,
+    78,
+    23,
+    49,
+    2933,
+    2459,
+    1065,
+    2582,
+    1588
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-12",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6080,
+    "prompt_tokens": 6048,
+    "completion_tokens": 32
+   },
+   "timings_ms": {
+    "retrieval": 111,
+    "llm": 15060
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1014,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru marry Rem wedding"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2766,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1865,
+    2785,
+    2786,
+    2780,
+    3899
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-13",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "beyond_corpus",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 6670,
+    "prompt_tokens": 6637,
+    "completion_tokens": 33
+   },
+   "timings_ms": {
+    "retrieval": 82,
+    "llm": 3785
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 3,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1012,
+      "completion_tokens": 19,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "royal selection winner ruler Lugunica"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3064,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    10177,
+    9584,
+    10178,
+    9585,
+    1149
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-14",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "false_premise",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 16509,
+    "prompt_tokens": 16429,
+    "completion_tokens": 80
+   },
+   "timings_ms": {
+    "retrieval": 277,
+    "llm": 7836
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1018,
+      "completion_tokens": 23,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru divine protection Reinhard duel",
+      "volumes": [
+       4
+      ]
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 3115,
+      "completion_tokens": 25,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "\"divine protection\" Reinhard Subaru volume",
+      "volumes": [
+       4
+      ]
+     },
+     "new_passages": [
+      6,
+      7
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 3967,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "divine protection Reinhard Subaru"
+     },
+     "new_passages": [
+      8,
+      12
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5767,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1111,
+    1230,
+    1221,
+    1224,
+    1232,
+    1027,
+    1047,
+    9141,
+    9097,
+    8806,
+    6025,
+    9136
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  },
+  {
+   "id": "oos-15",
+   "category": "out_of_scope",
+   "split": "dev",
+   "oos_type": "not_in_text",
+   "answer": "Not found in the provided passages.",
+   "found": false,
+   "model": "gemini-3.5-flash-lite",
+   "usage": {
+    "total_tokens": 16771,
+    "prompt_tokens": 16702,
+    "completion_tokens": 69
+   },
+   "timings_ms": {
+    "retrieval": 194,
+    "llm": 7990
+   },
+   "mode": "simple+agent",
+   "route_reason": null,
+   "llm_calls": 5,
+   "trace": [
+    {
+     "step": 1,
+     "llm": {
+      "prompt_tokens": 1012,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 1,
+     "tool": "search",
+     "args": {
+      "query": "Subaru younger sister Japan"
+     },
+     "new_passages": [
+      1,
+      5
+     ]
+    },
+    {
+     "step": 2,
+     "llm": {
+      "prompt_tokens": 2891,
+      "completion_tokens": 18,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 2,
+     "tool": "search",
+     "args": {
+      "query": "Subaru sister Japan family"
+     },
+     "new_passages": [
+      6,
+      9
+     ]
+    },
+    {
+     "step": 3,
+     "llm": {
+      "prompt_tokens": 4492,
+      "completion_tokens": 19,
+      "finish_reason": "tool_calls"
+     }
+    },
+    {
+     "step": 3,
+     "tool": "search",
+     "args": {
+      "query": "Subaru parents Japan only child"
+     },
+     "new_passages": [
+      10,
+      13
+     ]
+    },
+    {
+     "step": 4,
+     "llm": {
+      "prompt_tokens": 5869,
+      "completion_tokens": 7,
+      "finish_reason": "stop"
+     }
+    }
+   ],
+   "context_chunk_ids": [
+    1957,
+    9161,
+    1956,
+    953,
+    8115,
+    7466,
+    929,
+    906,
+    8933,
+    3099,
+    3096,
+    3124,
+    3110
+   ],
+   "cited_refs": [],
+   "judge_usage": {},
+   "verdict": "refused"
+  }
+ ]
+}

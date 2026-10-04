@@ -53,6 +53,8 @@ services:
       RETRIEVAL_METHOD: ${RETRIEVAL_METHOD:-}
       RETRIEVAL_SCOPE: ${RETRIEVAL_SCOPE:-}
       RETRIEVAL_RERANK: ${RETRIEVAL_RERANK:-}
+      QA_MODE: ${QA_MODE:-}
+      QA_ESCALATE: ${QA_ESCALATE:-}
       # Bind mounts from Windows/macOS hosts don't propagate inotify events
       WATCHFILES_FORCE_POLLING: "true"
     ports:

@@ -4,7 +4,8 @@ from src.schemas.auth import CamelModel
 
 
 class AskRequest(CamelModel):
-    # English only at this stage
+    # Any language in agent mode (it searches in English and answers in the question's language);
+    # the simple path is English only
     question: str = Field(min_length=3, max_length=1000)
     top_k: int | None = Field(default=None, ge=1, le=10)
 
@@ -32,3 +33,6 @@ class AskResponse(CamelModel):
     embedding_model: str
     usage: dict
     timings_ms: dict
+    mode: str  # simple | agent | simple+agent
+    route_reason: str | None = None
+    trace: list[dict] = []  # agent tool calls and per-step token use

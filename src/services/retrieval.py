@@ -286,17 +286,23 @@ def _rankings(conn: Connection, embedder, question: str, n: int, scope: Scope | 
     return rankings, cosine
 
 
-def retrieve(conn: Connection, embedder, question: str, k: int, cfg: RetrievalConfig) -> list[Hit]:
-    if cfg.scope not in ("off", "filter", "boost"):
+def retrieve(conn: Connection, embedder, question: str, k: int, cfg: RetrievalConfig,
+             scope: Scope | None = None) -> list[Hit]:
+    """Top k chunks for the question. An explicit scope (from the agent's tool call) is a hard
+    filter; otherwise cfg.scope decides what to do with volumes named in the question."""
+    if scope is not None:
+        cfg = replace(cfg, scope="filter")
+    elif cfg.scope not in ("off", "filter", "boost"):
         raise ValueError(f"unknown scope mode {cfg.scope!r}")
-    scope = parse_scope(question) if cfg.scope != "off" else None
+    elif cfg.scope != "off":
+        scope = parse_scope(question)
     n = max(cfg.candidates, k)
     rankings, cosine = _rankings(conn, embedder, question, n, scope if cfg.scope == "filter" else None, cfg)
     if scope is not None and cfg.scope == "boost":
         rankings += _rankings(conn, embedder, question, n, scope, cfg)[0]
     if scope is not None and cfg.scope == "filter" and not any(rankings):
         # The named volume/chapter does not exist (or holds nothing): search everything
-        return retrieve(conn, embedder, question, k, replace(cfg, scope="off"))
+        return retrieve(conn, embedder, question, k, replace(cfg, scope="off"), None)
     ids = rankings[0] if len(rankings) == 1 else rrf(rankings, cfg.rrf_k)
     ids = ids[:n]
     # Cosine similarity for plain vector search; otherwise rank-based (raw scores differ in scale)

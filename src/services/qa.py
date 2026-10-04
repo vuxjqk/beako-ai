@@ -52,6 +52,30 @@ class Answer:
     model: str
     usage: dict = field(default_factory=dict)
     timings_ms: dict = field(default_factory=dict)
+    # simple | agent | simple+agent (simple path refused, agent retried)
+    mode: str = "simple"
+    route_reason: str | None = None
+    trace: list[dict] = field(default_factory=list)
+
+
+# Questions one search rarely answers: summaries, comparisons, changes over time, lists
+COMPLEX_RE = re.compile(
+    r"\b(summar\w*|overview|recap|compare|comparison|contrast|differ\w*|evolv\w*|"
+    r"how many times|each of|all the|list (?:all|the)|name the|timeline|"
+    r"chang\w* (?:from|between|over|across)|from .{3,60}? to (?:the )?(?:events|end|volume))\b",
+    re.I)
+# Letters only Vietnamese uses (not é/è/ê, which appear in names such as Romanée-Conti)
+VIETNAMESE_RE = re.compile("[ăâđôơưạảãằẳẵặắầẩẫậấẻẽẹềểễệếỉĩịỏõọồổỗộốờởỡợớủũụừửữựứỳỷỹỵ]", re.I)
+
+
+def route(question: str) -> tuple[str, str | None]:
+    """("agent", reason) for questions the simple path handles badly, else ("simple", None)."""
+    if VIETNAMESE_RE.search(question):
+        return "agent", "not English: the agent translates its searches"
+    m = COMPLEX_RE.search(question)
+    if m:
+        return "agent", f"complex question ({m.group(0)!r})"
+    return "simple", None
 
 
 def _label(hit: Hit) -> str:
@@ -79,20 +103,7 @@ def retrieve(db: Session, question: str, k: int, cfg: RetrievalConfig | None = N
     return retrieval.retrieve(db.connection(), get_embedder(), question, k, cfg or retrieval.default_config())
 
 
-def answer_question(db: Session, question: str, top_k: int | None = None,
-                    cfg: RetrievalConfig | None = None) -> Answer:
-    if not config.LLM_API_KEY:
-        raise llm.LLMNotConfigured("LLM_API_KEY is not set")
-    k = top_k or config.QA_TOP_K
-    t0 = time.perf_counter()
-    hits = retrieve(db, question, k, cfg)
-    t1 = time.perf_counter()
-    completion = llm.chat(SYSTEM_PROMPT, build_prompt(question, hits))
-    t2 = time.perf_counter()
-
-    text = completion.text
-    found = bool(text) and not text.startswith(NOT_FOUND.rstrip("."))
-    cited = cited_numbers(text, len(hits)) if found else set()
+def _sources(hits: list[Hit], cited: set[int]) -> list[dict]:
     sources = []
     for i, h in enumerate(hits, 1):
         r = h.row
@@ -109,13 +120,64 @@ def answer_question(db: Session, question: str, top_k: int | None = None,
             "citation": h.citation,
             "excerpt": r.text[:300],
         })
+    return sources
+
+
+def _simple(db: Session, question: str, k: int, cfg: RetrievalConfig | None) -> Answer:
+    t0 = time.perf_counter()
+    hits = retrieve(db, question, k, cfg)
+    t1 = time.perf_counter()
+    completion = llm.chat(SYSTEM_PROMPT, build_prompt(question, hits))
+    t2 = time.perf_counter()
+    text = completion.text
+    found = bool(text) and not text.startswith(NOT_FOUND.rstrip("."))
     return Answer(
         question=question,
         answer=text,
         found=found,
-        sources=sources,
+        sources=_sources(hits, cited_numbers(text, len(hits)) if found else set()),
         model=completion.model,
         usage=completion.usage,
         timings_ms={"retrieval": round((t1 - t0) * 1000), "llm": round((t2 - t1) * 1000)},
     )
 
+
+def _agent(db: Session, question: str, cfg: RetrievalConfig | None) -> Answer:
+    from src.services import agent
+
+    r = agent.run(db, get_embedder(), question, cfg or retrieval.default_config())
+    return Answer(
+        question=question,
+        answer=r.answer,
+        found=r.found,
+        sources=_sources(r.hits, cited_numbers(r.answer, len(r.hits)) if r.found else set()),
+        model=r.model,
+        usage=r.usage,
+        timings_ms=r.timings_ms,
+        mode="agent",
+        trace=r.trace,
+    )
+
+
+def answer_question(db: Session, question: str, top_k: int | None = None,
+                    cfg: RetrievalConfig | None = None, mode: str | None = None) -> Answer:
+    """mode: simple (one search + one LLM call), agent (tool-using loop), or auto (route by
+    question; with QA_ESCALATE a simple-path "not found" is retried by the agent)."""
+    if not config.LLM_API_KEY:
+        raise llm.LLMNotConfigured("LLM_API_KEY is not set")
+    requested = mode or config.QA_MODE
+    if requested not in ("simple", "agent", "auto"):
+        raise ValueError(f"unknown QA mode {requested!r}")
+    path, reason = route(question) if requested == "auto" else (requested, None)
+    if path == "agent":
+        a = _agent(db, question, cfg)
+        a.route_reason = reason
+        return a
+    a = _simple(db, question, top_k or config.QA_TOP_K, cfg)
+    if requested == "auto" and config.QA_ESCALATE and not a.found:
+        b = _agent(db, question, cfg)
+        b.mode, b.route_reason = "simple+agent", "simple path found nothing"
+        b.usage = {k: a.usage.get(k, 0) + b.usage.get(k, 0) for k in set(a.usage) | set(b.usage)}
+        b.timings_ms = {k: a.timings_ms.get(k, 0) + b.timings_ms.get(k, 0) for k in a.timings_ms}
+        return b
+    return a

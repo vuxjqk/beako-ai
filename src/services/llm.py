@@ -53,17 +53,20 @@ def _retry_after(err: urllib.error.HTTPError, body: str) -> float | None:
     return float(m.group(1)) + 1 if m else None
 
 
-def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | None = None,
-         temperature: float | None = None) -> Completion:
-    """One chat completion; the keyword overrides let the evaluation judge use other settings."""
+@dataclass
+class ToolTurn:
+    """One assistant turn of a tool-using conversation."""
+    message: dict  # the assistant message exactly as returned; send it back unchanged
+    tool_calls: list[dict]
+    text: str
+    model: str
+    finish_reason: str | None
+    usage: dict
+
+
+def _post(body: dict) -> dict:
     if not config.LLM_API_KEY:
         raise LLMNotConfigured("LLM_API_KEY is not set")
-    body = {
-        "model": model or config.LLM_MODEL,
-        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        "max_tokens": max_tokens or config.LLM_MAX_OUTPUT_TOKENS,
-        "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
-    }
     # Thinking models (e.g. Gemini 2.5) otherwise spend the output budget on reasoning
     if config.LLM_REASONING_EFFORT:
         body["reasoning_effort"] = config.LLM_REASONING_EFFORT
@@ -76,8 +79,7 @@ def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | 
     for attempt in range(RETRIES + 1):
         try:
             with urllib.request.urlopen(req, timeout=config.LLM_TIMEOUT_SECONDS) as resp:
-                data = json.load(resp)
-            break
+                return json.load(resp)
         except urllib.error.HTTPError as e:
             raw = e.read().decode(errors="replace")
             # Rate limits and "model overloaded" are transient on shared free tiers; wait as
@@ -89,8 +91,41 @@ def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | 
             raise LLMError(f"LLM API returned {e.code}: {raw[:500]}") from e
         except (urllib.error.URLError, TimeoutError) as e:
             raise LLMError(f"LLM API unreachable: {e}") from e
+    raise LLMError("LLM API retries exhausted")
 
+
+def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | None = None,
+         temperature: float | None = None) -> Completion:
+    """One chat completion; the keyword overrides let the evaluation judge use other settings."""
+    body = {
+        "model": model or config.LLM_MODEL,
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "max_tokens": max_tokens or config.LLM_MAX_OUTPUT_TOKENS,
+        "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
+    }
+    data = _post(body)
     choice = (data.get("choices") or [{}])[0]
     text = (choice.get("message") or {}).get("content") or ""
     return Completion(text.strip(), data.get("model", body["model"]),
                       choice.get("finish_reason"), data.get("usage") or {})
+
+
+def chat_tools(messages: list[dict], tools: list[dict], *, tool_choice: str = "auto",
+               max_tokens: int | None = None) -> ToolTurn:
+    """One step of a tool-calling conversation (OpenAI "tools" format). tool_choice="none" asks
+    for a text answer; the tools stay declared because the history already contains calls."""
+    body = {
+        "model": config.LLM_MODEL,
+        "messages": messages,
+        "max_tokens": max_tokens or config.LLM_MAX_OUTPUT_TOKENS,
+        "temperature": config.LLM_TEMPERATURE,
+    }
+    if tools:
+        body["tools"] = tools
+        body["tool_choice"] = tool_choice
+    data = _post(body)
+    choice = (data.get("choices") or [{}])[0]
+    message = choice.get("message") or {"role": "assistant", "content": ""}
+    message.setdefault("role", "assistant")
+    return ToolTurn(message, message.get("tool_calls") or [], (message.get("content") or "").strip(),
+                    data.get("model", body["model"]), choice.get("finish_reason"), data.get("usage") or {})

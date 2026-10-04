@@ -112,20 +112,38 @@ def _generation_section(gruns: list[dict], questions: dict[str, golden.Question]
            "(đúng / một phần / sai; điểm = đúng + 0,5 × một phần), **trung thực** chỉ so với các đoạn được trích. "
            "Từ chối nhầm: câu có đáp án nhưng hệ thống trả lời không tìm thấy. Câu ngoài phạm vi được tính là "
            "xử lý đúng khi hệ thống từ chối hoặc chỉ ra tiền đề sai.", "",
-           "| Lần chạy | Nhãn | Truy xuất | Mô hình | Prompt | Giám khảo | Đủ | Điểm | Đúng | Một phần | Sai | Từ chối nhầm "
-           "| Bằng chứng trong ngữ cảnh | Trung thực | Trích chunk đúng | Ngoài phạm vi xử lý đúng | Token vào/ra "
-           "| LLM ms |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "Lần chạy *mô phỏng* (`python -m src.eval combine`) ghép kết quả từng câu của một lần chạy simple và "
+           "một lần chạy agent theo chính sách định tuyến, không gọi LLM thêm.", "",
+           "| Lần chạy | Nhãn | Chế độ | Truy xuất | Mô hình | Prompt | Giám khảo | Đủ | Điểm | Đúng | Một phần | Sai "
+           "| Từ chối nhầm | Bằng chứng trong ngữ cảnh | Trung thực | Trích chunk đúng | Ngoài phạm vi xử lý đúng "
+           "| Gọi LLM/câu | Token vào/ra | Tổng ms |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in gruns:
         g, s = r["config"]["generation"], r["summary"]
         i, f, o, c = s["in_scope"], s["faithfulness"], s["out_of_scope"], s["cost"]
-        out.append(f"| {r['dir']} | {r.get('label') or ''} | `{r['config']['retrieval']['method']}` "
+        out.append(f"| {r['dir']} | {r.get('label') or ''} | {g.get('qa_mode', 'simple')} "
+                   f"| `{r['config']['retrieval']['method']}` "
                    f"| `{g['model']}` | `{g['system_prompt_sha256']}` "
                    f"| `{g['judge_model']}` | {'✅' if r.get('complete') else '⚠️ ' + str(s['errors']) + ' lỗi'} "
                    f"| {_pct(i['score'])} | {_pct(i['correct'])} | {_pct(i['partial'])} | {_pct(i['incorrect'])} "
                    f"| {_pct(i['false_refusal'])} | {_pct(i['gold_in_context'])} | {_pct(f['supported'])} "
                    f"| {_pct(f['cites_gold_chunk'])} | {_pct(o['handled'])} "
-                   f"| {_num(c['prompt_tokens_avg'])}/{_num(c['completion_tokens_avg'])} | {_num(c['llm_ms_avg'])} |")
+                   f"| {_num(c.get('llm_calls_avg') or 1)} "
+                   f"| {_num(c['prompt_tokens_avg'])}/{_num(c['completion_tokens_avg'])} "
+                   f"| {_num(c.get('total_ms_avg') or c['llm_ms_avg'])} |")
+    out.append("")
+
+    # The comparison that decides whether a change helps: score per question type, per run
+    cats = list(golden.CATEGORIES[:-1])
+    out += ["### Điểm theo loại câu và split, từng lần chạy", "",
+            "| Lần chạy | Chế độ | " + " | ".join(cats) + " | dev | test | Ngoài phạm vi |",
+            "|---|---|" + "---|" * (len(cats) + 3)]
+    for r in gruns:
+        s = r["summary"]
+        cells = [_pct(s["by_category"].get(c, {}).get("score")) for c in cats]
+        cells += [_pct(s["by_split"].get(sp, {}).get("score")) for sp in golden.SPLITS]
+        out.append(f"| {r['dir']} | {r['config']['generation'].get('qa_mode', 'simple')} | " + " | ".join(cells)
+                   + f" | {_pct(s['out_of_scope']['handled'])} |")
     out.append("")
 
     latest = gruns[-1]
