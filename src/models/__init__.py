@@ -1,3 +1,4 @@
+from src.models.avatar_file import AvatarFile
 from src.models.book import (
     BookChunk,
     BookParagraph,
@@ -17,6 +18,7 @@ from src.models.refresh_token import RefreshToken
 from src.models.user import User, UserRole
 
 __all__ = [
+    "AvatarFile",
     "BookChunk",
     "BookParagraph",
     "BookPart",

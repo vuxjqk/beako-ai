@@ -43,7 +43,7 @@ from src.services import llm  # noqa: E402
 from src.services.qa import Answer  # noqa: E402
 
 # Tables a test may write to; the book tables are left alone
-TABLES = ["login_attempts", "qa_requests", "qa_messages", "qa_conversations", "refresh_tokens", "otp_codes",
+TABLES = ["avatar_files", "login_attempts", "qa_requests", "qa_messages", "qa_conversations", "refresh_tokens", "otp_codes",
           "users"]
 PASSWORD = "correct-horse-battery"
 

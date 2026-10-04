@@ -1,0 +1,69 @@
+# Render Blueprint for the backend (see DEPLOY.md). The frontend is on Vercel, the database on Neon.
+# Values marked "sync: false" are secrets Render asks for when the Blueprint is created.
+services:
+  - type: web
+    name: beako-backend
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    # Deploy a push to main only once GitHub Actions (tests, lint) has passed
+    autoDeployTrigger: checksPass
+    envVars:
+      # Neon, direct (non-pooler) connection:
+      # postgresql+psycopg://USER:PASSWORD@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      # HTTPS only; the frontend proxies the API under /api
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: REFRESH_COOKIE_PATH
+        value: /api/auth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      # Mail for sign-up and password-reset codes
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURITY
+        value: starttls
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3.5-flash-lite
+      - key: LLM_API_KEY
+        sync: false
+      # Cost estimates and the daily budget depend on these: check your model's price page
+      - key: LLM_PRICE_INPUT_PER_MTOK
+        value: "0.5"
+      - key: LLM_PRICE_OUTPUT_PER_MTOK
+        value: "3"
+      - key: QA_DAILY_BUDGET_USD
+        value: "5"
+      - key: QA_TIMEZONE
+        value: Asia/Ho_Chi_Minh
+
+      # Free plan: no persistent disk and 512 MB RAM
+      - key: STORAGE_BACKEND
+        value: db
+      - key: EMBED_CACHE_DIR
+        value: /opt/models
+      - key: HF_HUB_OFFLINE
+        value: "1"
+      - key: PRELOAD_EMBEDDER
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO

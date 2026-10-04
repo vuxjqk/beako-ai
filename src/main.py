@@ -1,4 +1,5 @@
 import logging
+import threading
 from pathlib import Path
 
 from fastapi import Depends, FastAPI
@@ -6,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from src.api import admin_usage, admin_users, auth, me, qa
+from src.api import admin_usage, admin_users, auth, me, qa, uploads
 from src.core import config
 from src.models import get_db
 from src.services.storage import UPLOAD_URL_PREFIX
@@ -28,8 +29,17 @@ app.include_router(admin_users.router)
 app.include_router(admin_usage.router)
 app.include_router(qa.router)
 
-Path(config.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
-app.mount(UPLOAD_URL_PREFIX, StaticFiles(directory=config.UPLOAD_DIR), name="uploads")
+if config.STORAGE_BACKEND == "db":
+    app.include_router(uploads.router)
+else:
+    Path(config.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    app.mount(UPLOAD_URL_PREFIX, StaticFiles(directory=config.UPLOAD_DIR), name="uploads")
+
+if config.PRELOAD_EMBEDDER:
+    from src.services.qa import get_embedder
+
+    # A sleeping free-plan host wakes up on a request; have the model ready for the first question
+    threading.Thread(target=get_embedder, daemon=True, name="preload-embedder").start()
 
 
 @app.get("/health")

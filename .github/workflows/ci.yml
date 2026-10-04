@@ -54,3 +54,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      # The same production build Vercel runs; the backend address only matters at runtime
+      - run: npm run build
+        env:
+          BACKEND_URL: https://example.invalid

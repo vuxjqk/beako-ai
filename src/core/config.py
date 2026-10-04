@@ -16,6 +16,9 @@ GOOGLE_CLIENT_IDS = [c.strip() for c in os.getenv("GOOGLE_CLIENT_ID", "").split(
 # Level of the app's own loggers (beako.*): DEBUG | INFO | WARNING
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+# Where avatars are stored: local (files under UPLOAD_DIR) | db (in PostgreSQL, for hosts whose
+# disk does not survive a restart, such as Render's free plan)
+STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local").lower()
 # Local folder for uploaded files, relative to the working dir (/app in Docker)
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 AVATAR_MAX_BYTES = int(os.getenv("AVATAR_MAX_BYTES", str(2 * 1024 * 1024)))
@@ -50,6 +53,8 @@ LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 # Longest provider-requested back-off (429/503) a request will sit through before failing
 LLM_MAX_RETRY_WAIT_SECONDS = float(os.getenv("LLM_MAX_RETRY_WAIT_SECONDS", "20"))
 QA_TOP_K = int(os.getenv("QA_TOP_K", "6"))
+# Load the embedding model at startup (in the background) instead of on the first question
+PRELOAD_EMBEDDER = os.getenv("PRELOAD_EMBEDDER", "false").lower() == "true"
 # Retrieval for QA (see src/services/retrieval.py; measure changes with python -m src.eval retrieval)
 RETRIEVAL_METHOD = os.getenv("RETRIEVAL_METHOD") or "hybrid"  # vector | keyword | hybrid
 RETRIEVAL_KEYWORD = os.getenv("RETRIEVAL_KEYWORD", "bm25")  # bm25 | ts
