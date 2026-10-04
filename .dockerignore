@@ -8,3 +8,4 @@ uploads
 frontend
 data/models
 data/dump
+node_modules
