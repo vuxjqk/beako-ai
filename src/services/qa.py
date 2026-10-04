@@ -74,12 +74,21 @@ def cited_numbers(text: str, limit: int) -> set[int]:
     return {n for n in nums if 1 <= n <= limit}
 
 
+# Recorded with every evaluation run; change it whenever retrieve() changes behaviour
+RETRIEVAL_METHOD = "vector"
+
+
+def retrieve(db: Session, question: str, k: int) -> list[Hit]:
+    """The retrieval step of answer_question, also called by the evaluation (src.eval)."""
+    return vector_search(db.connection(), get_embedder(), question, k=k)
+
+
 def answer_question(db: Session, question: str, top_k: int | None = None) -> Answer:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
     k = top_k or config.QA_TOP_K
     t0 = time.perf_counter()
-    hits = vector_search(db.connection(), get_embedder(), question, k=k)
+    hits = retrieve(db, question, k)
     t1 = time.perf_counter()
     completion = llm.chat(SYSTEM_PROMPT, build_prompt(question, hits))
     t2 = time.perf_counter()

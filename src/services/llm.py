@@ -53,14 +53,16 @@ def _retry_after(err: urllib.error.HTTPError, body: str) -> float | None:
     return float(m.group(1)) + 1 if m else None
 
 
-def chat(system: str, user: str) -> Completion:
+def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | None = None,
+         temperature: float | None = None) -> Completion:
+    """One chat completion; the keyword overrides let the evaluation judge use other settings."""
     if not config.LLM_API_KEY:
         raise LLMNotConfigured("LLM_API_KEY is not set")
     body = {
-        "model": config.LLM_MODEL,
+        "model": model or config.LLM_MODEL,
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        "max_tokens": config.LLM_MAX_OUTPUT_TOKENS,
-        "temperature": config.LLM_TEMPERATURE,
+        "max_tokens": max_tokens or config.LLM_MAX_OUTPUT_TOKENS,
+        "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
     }
     # Thinking models (e.g. Gemini 2.5) otherwise spend the output budget on reasoning
     if config.LLM_REASONING_EFFORT:
@@ -90,5 +92,5 @@ def chat(system: str, user: str) -> Completion:
 
     choice = (data.get("choices") or [{}])[0]
     text = (choice.get("message") or {}).get("content") or ""
-    return Completion(text.strip(), data.get("model", config.LLM_MODEL),
+    return Completion(text.strip(), data.get("model", body["model"]),
                       choice.get("finish_reason"), data.get("usage") or {})
