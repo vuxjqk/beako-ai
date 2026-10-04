@@ -25,8 +25,10 @@ RETRIES = 3
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 # An empty reply (no text, no tool calls) is asked again this many times before giving up
 EMPTY_RETRIES = 1
-# 429 bodies that mean the account's quota is spent, not a short burst limit: retrying won't help
-QUOTA_RE = re.compile(r"insufficient_quota|billing|PerDay|per day|exceeded your current quota", re.I)
+# 429 bodies that mean the account's quota is spent, not a short burst limit: retrying won't help.
+# Gemini words both alike ("You exceeded your current quota ... billing"); only the quotaId tells
+# a daily quota (GenerateRequestsPerDay...) from the per-minute one (...PerMinute...)
+QUOTA_RE = re.compile(r"insufficient_quota|PerDay")
 
 
 class LLMError(Exception):
