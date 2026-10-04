@@ -26,6 +26,8 @@ export type Answer = {
   conversationId: string;
   messageId: string;
   timingsMs: { retrieval?: number; llm?: number };
+  /** Agent steps: {step, llm} model calls and {step, tool, args} tool calls */
+  trace: Record<string, unknown>[];
 };
 
 /** Progress reported while the answer is prepared (see POST /qa/stream). */
@@ -98,7 +100,36 @@ export async function askStream(
   throw new ApiError(502, "The answer stream ended unexpectedly");
 }
 
+export type ConversationSummary = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StoredTurn = {
+  question: string;
+  maxVolume: number | null;
+  askedAt: string;
+  /** Exactly one of answer / error, or neither while the question is still being answered */
+  answer: Answer | null;
+  /** cancelled: the asker left before the answer was ready */
+  error: "cancelled" | "failed" | null;
+  feedback: { rating: Rating; comment: string | null } | null;
+};
+
+export type ConversationDetail = ConversationSummary & { turns: StoredTurn[] };
+
 export const qaApi = {
+  conversations: (before?: string | null, limit = 30) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (before) params.set("before", before);
+    return api<{ items: ConversationSummary[]; nextCursor: string | null }>(`/qa/conversations?${params}`);
+  },
+  conversation: (id: string) => api<ConversationDetail>(`/qa/conversations/${id}`),
+  rename: (id: string, title: string) =>
+    api<ConversationSummary>(`/qa/conversations/${id}`, { method: "PATCH", json: { title } }),
+  remove: (id: string) => api(`/qa/conversations/${id}`, { method: "DELETE" }),
   feedback: (messageId: string, rating: Rating | null, comment?: string) =>
     api<{ rating: Rating | null; comment: string | null }>(`/qa/messages/${messageId}/feedback`, {
       method: "PUT",

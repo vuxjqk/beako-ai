@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthProvider } from "@/components/auth-provider";
+import { ConversationsProvider } from "@/components/conversations-provider";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
@@ -13,18 +14,20 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <AuthProvider>
-      <SidebarProvider defaultOpen={sidebarOpen}>
-        <AppSidebar />
-        <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
-            <span className="text-sm font-medium text-muted-foreground">Beako AI</span>
-          </header>
-          <VerifyEmailBanner />
-          <div className="flex flex-1 flex-col">{children}</div>
-        </SidebarInset>
-      </SidebarProvider>
+      <ConversationsProvider>
+        <SidebarProvider defaultOpen={sidebarOpen}>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
+              <span className="text-sm font-medium text-muted-foreground">Beako AI</span>
+            </header>
+            <VerifyEmailBanner />
+            <div className="flex flex-1 flex-col">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
+      </ConversationsProvider>
     </AuthProvider>
   );
 }

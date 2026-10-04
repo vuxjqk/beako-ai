@@ -74,3 +74,40 @@ class ChunkResponse(CamelModel):
     chapter: str
     paragraphs: list[int]
     text: str
+
+
+class ConversationSummary(CamelModel):
+    id: uuid.UUID
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationPage(CamelModel):
+    items: list[ConversationSummary]
+    # Pass as `before` for the next (older) page; null when there is none
+    next_cursor: str | None = None
+
+
+class TurnFeedback(CamelModel):
+    rating: int
+    comment: str | None
+
+
+class ConversationTurn(CamelModel):
+    question: str
+    max_volume: int | None
+    asked_at: datetime
+    # One of: the answer; an error (cancelled = the asker left before it was ready); or neither,
+    # while the question is still being answered
+    answer: AskResponse | None = None
+    error: Literal["cancelled", "failed"] | None = None
+    feedback: TurnFeedback | None = None
+
+
+class ConversationDetail(ConversationSummary):
+    turns: list[ConversationTurn]
+
+
+class RenameConversationRequest(CamelModel):
+    title: str = Field(min_length=1, max_length=255)

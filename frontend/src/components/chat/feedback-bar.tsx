@@ -14,10 +14,19 @@ import { cn } from "@/lib/utils";
  * "Is this answer right?" Ratings are stored with the answer and become evaluation data.
  * Clicking the chosen rating again takes it back; a "wrong" rating can carry a comment.
  */
-export function FeedbackBar({ messageId }: { messageId: string }) {
-  const [rating, setRating] = useState<Rating | null>(null);
-  const [comment, setComment] = useState("");
-  const [commentSent, setCommentSent] = useState(false);
+export function FeedbackBar({
+  messageId,
+  initialRating = null,
+  initialComment = null,
+}: {
+  messageId: string;
+  /** The stored rating and comment, for answers loaded from history */
+  initialRating?: Rating | null;
+  initialComment?: string | null;
+}) {
+  const [rating, setRating] = useState<Rating | null>(initialRating);
+  const [comment, setComment] = useState(initialComment ?? "");
+  const [commentSent, setCommentSent] = useState(!!initialComment);
   const [saving, setSaving] = useState(false);
 
   async function save(next: Rating | null, withComment?: string) {

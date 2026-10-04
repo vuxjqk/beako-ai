@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { ConversationHistory } from "@/components/conversation-history";
 import { Logo, LogoMark } from "@/components/logo";
 import { ThemeRadioItems } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +86,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        <ConversationHistory onNavigate={closeOnMobile} />
       </SidebarContent>
 
       <SidebarFooter>

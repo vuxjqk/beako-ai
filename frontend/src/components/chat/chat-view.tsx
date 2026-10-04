@@ -1,20 +1,28 @@
 "use client";
 
-import { ArrowUp, EyeOff, SquarePen } from "lucide-react";
+import { ArrowUp, CircleAlert, EyeOff, SquarePen } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { ChatTurn, type Turn } from "@/components/chat/chat-turn";
-import { describe } from "@/components/chat/progress-steps";
+import { describe, type Step } from "@/components/chat/progress-steps";
+import { conversationIdFromPath, useConversations } from "@/components/conversations-provider";
 import { LogoMark, SLOGAN } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
 import { errorMessage } from "@/lib/errors";
-import { askStream, MAX_VOLUME } from "@/lib/qa";
+import { askStream, MAX_VOLUME, qaApi, type StatusEvent, type StoredTurn } from "@/lib/qa";
 
 const SPOILER_KEY = "beako.maxVolume";
 const MAX_QUESTION = 1000;
+// While a loaded conversation still has a question being answered, re-read it this often
+const WAITING_POLL_MS = 3000;
+// A question unanswered for longer than this was lost (the server gives up long before)
+const WAITING_GIVE_UP_MS = 10 * 60 * 1000;
 const EXAMPLES = [
   "Ai đã giết Cá Voi Trắng?",
   "Tóm tắt những gì xảy ra ở Thánh Địa.",
@@ -71,6 +79,36 @@ function askErrorMessage(error: unknown): string {
   });
 }
 
+/** A question from history as a chat turn; agent tool calls become its "searched N times" steps. */
+function fromStored(t: StoredTurn, index: number): Turn {
+  const startedAt = new Date(t.askedAt).getTime();
+  const base = { id: `stored-${index}`, question: t.question, maxVolume: t.maxVolume, startedAt };
+  if (t.answer) {
+    const steps = t.answer.trace
+      .filter((e) => "tool" in e)
+      .map((e) => describe({ type: "tool", ...e } as StatusEvent))
+      .filter((step): step is Step => step !== null);
+    const ms = (t.answer.timingsMs.retrieval ?? 0) + (t.answer.timingsMs.llm ?? 0);
+    return { ...base, status: "done", steps, seconds: ms / 1000, answer: t.answer, feedback: t.feedback };
+  }
+  if (t.error) {
+    return {
+      ...base,
+      status: "error",
+      steps: [],
+      seconds: 0,
+      error:
+        t.error === "cancelled"
+          ? "Câu trả lời đã bị dừng vì bạn rời trang trước khi trả lời xong."
+          : "Không trả lời được câu hỏi này.",
+    };
+  }
+  if (Date.now() - startedAt > WAITING_GIVE_UP_MS) {
+    return { ...base, status: "error", steps: [], seconds: 0, error: "Câu hỏi này không có câu trả lời." };
+  }
+  return { ...base, status: "waiting", steps: [], seconds: 0 };
+}
+
 function saveSpoilerLimit(value: number | null) {
   try {
     if (value === null) localStorage.removeItem(SPOILER_KEY);
@@ -80,20 +118,71 @@ function saveSpoilerLimit(value: number | null) {
   }
 }
 
-/** Question answering over the novels: one conversation per page visit, no history yet. */
+/**
+ * Question answering over the novels. "/" starts a new conversation; "/c/<id>" shows a stored
+ * one. A new conversation moves to its own URL as soon as the server creates it, without
+ * remounting, so the answer in progress keeps streaming.
+ */
 export function ChatView() {
   const { user } = useAuth();
+  const { touch } = useConversations();
   const firstName = user.fullName.trim().split(/\s+/).at(-1);
+  const pathname = usePathname();
+  const routeId = conversationIdFromPath(pathname);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  // The stored conversation being loaded, and why loading failed
+  const [loading, setLoading] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [maxVolume, setMaxVolume] = useState<number | null>(null);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // The conversation on screen, readable from stream callbacks that outlive a switch
+  const shownRef = useRef<string | null>(null);
+  // Bumped on every switch, so a question asked before it no longer touches the screen
+  const viewRef = useRef(0);
   const pending = turns.some((t) => t.status === "pending");
+  const waiting = turns.some((t) => t.status === "waiting");
 
   // localStorage only exists in the browser; read it after the first render
   useEffect(() => setMaxVolume(readSpoilerLimit()), []);
+
+  const load = useCallback(async (id: string, quiet = false) => {
+    if (!quiet) setLoading(id);
+    try {
+      const detail = await qaApi.conversation(id);
+      if (shownRef.current !== id) return;
+      setTurns(detail.turns.map(fromStored));
+      setLoadError(null);
+    } catch (error) {
+      if (shownRef.current !== id || quiet) return;
+      setLoadError(errorMessage(error, { 404: "Không tìm thấy cuộc trò chuyện này. Có thể nó đã bị xóa." }));
+    } finally {
+      if (!quiet) setLoading((current) => (current === id ? null : current));
+    }
+  }, []);
+
+  // Follow the URL: "/" = a new conversation, "/c/<id>" = load it. Our own move from "/" to the
+  // new conversation's URL is already on screen and changes nothing. A question still being
+  // answered when the user switches keeps running on the server and lands in its conversation.
+  useEffect(() => {
+    if (routeId === shownRef.current) return;
+    shownRef.current = routeId;
+    viewRef.current += 1;
+    setConversationId(routeId);
+    setTurns([]);
+    setInput("");
+    setLoadError(null);
+    if (routeId) load(routeId);
+  }, [routeId, load]);
+
+  // A question still being answered (another tab, or this one before a reload): check back
+  useEffect(() => {
+    if (!waiting || !conversationId) return;
+    const timer = setInterval(() => load(conversationId, true), WAITING_POLL_MS);
+    return () => clearInterval(timer);
+  }, [waiting, conversationId, load]);
 
   // Tick the elapsed time of the pending answer
   useEffect(() => {
@@ -116,21 +205,30 @@ export function ChatView() {
     setTurns((all) => all.map((t) => (t.id === id ? change(t) : t)));
   }, []);
 
-  async function ask(text: string) {
+  async function ask(text: string, volumeLimit: number | null = maxVolume) {
     const question = text.trim();
-    if (question.length < 3 || pending) return;
+    if (question.length < 3 || pending || waiting) return;
     const id = crypto.randomUUID();
     const startedAt = Date.now();
+    const view = viewRef.current;
+    const onScreen = () => viewRef.current === view;
     setTurns((all) => [
       ...all,
-      { id, question, maxVolume, status: "pending", steps: [], startedAt, seconds: 0 },
+      { id, question, maxVolume: volumeLimit, status: "pending", steps: [], startedAt, seconds: 0 },
     ]);
     setInput("");
     try {
       const answer = await askStream(
-        { question, maxVolume, conversationId },
+        { question, maxVolume: volumeLimit, conversationId },
         {
-          onStart: ({ conversationId: cid }) => setConversationId(cid),
+          onStart: ({ conversationId: cid }) => {
+            touch({ id: cid, title: question });
+            if (!onScreen() || shownRef.current === cid) return;
+            // A new conversation: give it its URL (and history entry) without remounting
+            shownRef.current = cid;
+            setConversationId(cid);
+            window.history.replaceState(null, "", `/c/${cid}`);
+          },
           onStatus: (event) => {
             const step = describe(event);
             if (step) update(id, (t) => ({ ...t, steps: [...t.steps, step] }));
@@ -146,14 +244,21 @@ export function ChatView() {
         error: askErrorMessage(error),
       }));
     } finally {
-      textareaRef.current?.focus();
+      if (onScreen()) textareaRef.current?.focus();
     }
   }
 
   function newConversation() {
-    setTurns([]);
-    setConversationId(null);
-    setInput("");
+    // "/" and "/c/<id>" share this component: going to "/" resets it through the URL effect
+    if (routeId) {
+      window.history.pushState(null, "", "/");
+    } else {
+      shownRef.current = null;
+      viewRef.current += 1;
+      setTurns([]);
+      setConversationId(null);
+      setInput("");
+    }
     textareaRef.current?.focus();
   }
 
@@ -204,12 +309,49 @@ export function ChatView() {
             ))}
           </SelectContent>
         </Select>
-        <Button type="submit" size="icon" disabled={pending || input.trim().length < 3} aria-label="Gửi">
+        <Button
+          type="submit"
+          size="icon"
+          disabled={pending || waiting || input.trim().length < 3}
+          aria-label="Gửi"
+        >
           <ArrowUp />
         </Button>
       </div>
     </form>
   );
+
+  if (routeId && loadError) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-12 text-center">
+        <CircleAlert className="size-8 text-muted-foreground" />
+        <p className="max-w-sm text-sm text-muted-foreground">{loadError}</p>
+        <Button asChild variant="outline">
+          <Link href="/">
+            <SquarePen />
+            Cuộc trò chuyện mới
+          </Link>
+        </Button>
+      </main>
+    );
+  }
+
+  if (routeId && (loading === routeId || !turns.length)) {
+    return (
+      <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-8" aria-busy>
+        {[0, 1].map((i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="ml-auto h-10 w-2/5 rounded-2xl" />
+            <div className="space-y-2 pl-9">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-3/5" />
+            </div>
+          </div>
+        ))}
+      </main>
+    );
+  }
 
   if (!turns.length) {
     return (
@@ -250,8 +392,15 @@ export function ChatView() {
         </Button>
       </div>
       <div className="flex-1 space-y-8 py-4">
-        {turns.map((t) => (
-          <ChatTurn key={t.id} turn={t} />
+        {turns.map((t, i) => (
+          <ChatTurn
+            key={t.id}
+            turn={t}
+            // Only the last question can be asked again, and only while nothing else is running
+            onRetry={
+              i === turns.length - 1 && !pending && !waiting ? () => ask(t.question, t.maxVolume) : undefined
+            }
+          />
         ))}
         <div ref={bottomRef} />
       </div>

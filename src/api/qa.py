@@ -8,7 +8,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -16,8 +16,20 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_current_user
 from src.ingest.search import _COLUMNS, _JOINS, Hit
 from src.ingest.settings import MODEL_NAME
-from src.models import Conversation, SessionLocal, User, get_db
-from src.schemas.qa import AskRequest, AskResponse, ChunkResponse, FeedbackRequest, FeedbackResponse
+from src.models import Conversation, Message, SessionLocal, User, get_db
+from src.schemas.qa import (
+    AskRequest,
+    AskResponse,
+    ChunkResponse,
+    ConversationDetail,
+    ConversationPage,
+    ConversationSummary,
+    ConversationTurn,
+    FeedbackRequest,
+    FeedbackResponse,
+    RenameConversationRequest,
+    TurnFeedback,
+)
 from src.services import conversations, guard, llm, usage
 from src.services.qa import answer_question
 
@@ -267,3 +279,82 @@ def get_chunk(
     return ChunkResponse(chunk_id=row.id, citation=Hit(0.0, row).citation, volume=f"{book} {row.volume_number}",
                          chapter=": ".join(x for x in (row.label, row.title) if x),
                          paragraphs=[row.start_seq, row.end_seq], text=row.text)
+
+
+# --- conversation history -----------------------------------------------------------------------
+
+def _own(db: Session, user: User, conversation_id: uuid.UUID) -> Conversation:
+    conv = conversations.own_conversation(db, user.id, conversation_id)
+    if conv is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found")
+    return conv
+
+
+def _stored_answer(conv: Conversation, q: Message, a: Message) -> AskResponse:
+    return AskResponse(question=q.content, answer=a.content, found=bool(a.found), sources=a.sources or [],
+                       model=a.model or "", embedding_model=MODEL_NAME, usage=a.usage or {},
+                       timings_ms=a.timings_ms or {}, mode=a.mode or "", trace=a.trace or [],
+                       max_volume=a.max_volume, conversation_id=conv.id, message_id=a.id)
+
+
+@router.get("/conversations", response_model=ConversationPage)
+def list_conversations(
+    limit: int = Query(30, ge=1, le=100),
+    before: str | None = Query(None, max_length=100, description="nextCursor of the previous page"),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ConversationPage:
+    """The user's conversations, most recently active first."""
+    try:
+        rows, cursor = conversations.list_conversations(db, user.id, limit, before)
+    except ValueError:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Invalid cursor")
+    return ConversationPage(items=[ConversationSummary.model_validate(c, from_attributes=True) for c in rows],
+                            next_cursor=cursor)
+
+
+@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
+def get_conversation(
+    conversation_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ConversationDetail:
+    """Every question of a conversation with its stored answer, sources and the user's rating."""
+    conv = _own(db, user, conversation_id)
+    out = []
+    for q, a in conversations.turns(db, conv):
+        turn = ConversationTurn(question=q.content, max_volume=q.max_volume, asked_at=q.created_at)
+        if a is not None and a.error:
+            turn.error = "cancelled" if a.error.startswith("cancelled") else "failed"
+        elif a is not None:
+            turn.answer = _stored_answer(conv, q, a)
+            if a.feedback is not None:
+                turn.feedback = TurnFeedback(rating=a.feedback, comment=a.feedback_comment)
+        out.append(turn)
+    return ConversationDetail(id=conv.id, title=conv.title, created_at=conv.created_at,
+                              updated_at=conv.updated_at, turns=out)
+
+
+@router.patch("/conversations/{conversation_id}", response_model=ConversationSummary)
+def rename_conversation(
+    conversation_id: uuid.UUID,
+    body: RenameConversationRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ConversationSummary:
+    conv = _own(db, user, conversation_id)
+    title = " ".join(body.title.split())
+    if not title:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Title cannot be empty")
+    conversations.rename(db, conv, title)
+    return ConversationSummary.model_validate(conv, from_attributes=True)
+
+
+@router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_conversation(
+    conversation_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete a conversation and its messages. Usage and cost records are kept."""
+    conversations.delete(db, _own(db, user, conversation_id))

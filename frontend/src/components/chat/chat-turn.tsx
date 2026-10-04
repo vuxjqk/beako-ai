@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, EyeOff } from "lucide-react";
+import { CircleAlert, EyeOff, Loader, RotateCw } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AnswerBody } from "@/components/chat/answer-body";
@@ -8,22 +8,26 @@ import { FeedbackBar } from "@/components/chat/feedback-bar";
 import { ProgressSteps, type Step } from "@/components/chat/progress-steps";
 import { SourceDialog } from "@/components/chat/source-dialog";
 import { LogoMark } from "@/components/logo";
-import { NOT_FOUND, volumeLabel, type Answer, type Source } from "@/lib/qa";
+import { Button } from "@/components/ui/button";
+import { NOT_FOUND, volumeLabel, type Answer, type Rating, type Source } from "@/lib/qa";
 import { cn } from "@/lib/utils";
 
 export type Turn = {
   id: string;
   question: string;
   maxVolume: number | null;
-  status: "pending" | "done" | "error";
+  /** waiting: loaded from history while it is still being answered (in another tab or earlier visit) */
+  status: "pending" | "waiting" | "done" | "error";
   steps: Step[];
   startedAt: number;
   seconds: number;
   answer?: Answer;
   error?: string;
+  /** The stored rating, for turns loaded from history */
+  feedback?: { rating: Rating; comment: string | null } | null;
 };
 
-export function ChatTurn({ turn }: { turn: Turn }) {
+export function ChatTurn({ turn, onRetry }: { turn: Turn; onRetry?: () => void }) {
   const [openSource, setOpenSource] = useState<Source | null>(null);
   const [showAll, setShowAll] = useState(false);
   const answer = turn.answer;
@@ -53,11 +57,26 @@ export function ChatTurn({ turn }: { turn: Turn }) {
 
           <ProgressSteps steps={turn.steps} pending={turn.status === "pending"} seconds={turn.seconds} />
 
-          {turn.status === "error" && (
-            <p className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive">
-              <CircleAlert className="mt-0.5 size-4 shrink-0" />
-              {turn.error}
+          {turn.status === "waiting" && (
+            <p className="flex items-center gap-2 text-muted-foreground" aria-live="polite">
+              <Loader className="size-4 animate-spin" />
+              Câu trả lời đang được chuẩn bị…
             </p>
+          )}
+
+          {turn.status === "error" && (
+            <div className="space-y-2">
+              <p className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive">
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                {turn.error}
+              </p>
+              {onRetry && (
+                <Button variant="outline" size="sm" onClick={onRetry}>
+                  <RotateCw />
+                  Hỏi lại
+                </Button>
+              )}
+            </div>
           )}
 
           {answer &&
@@ -121,7 +140,13 @@ export function ChatTurn({ turn }: { turn: Turn }) {
             </div>
           )}
 
-          {answer && <FeedbackBar messageId={answer.messageId} />}
+          {answer && (
+            <FeedbackBar
+              messageId={answer.messageId}
+              initialRating={turn.feedback?.rating ?? null}
+              initialComment={turn.feedback?.comment ?? null}
+            />
+          )}
         </div>
       </div>
 
