@@ -24,7 +24,7 @@ os.environ.setdefault("JWT_SECRET", "test-secret-not-for-production-0123456789ab
 os.environ.setdefault("SMTP_HOST", "localhost")
 os.environ.setdefault("SMTP_FROM", "Beako Test <test@example.com>")
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip().strip("\"'")
 if not DATABASE_URL.rsplit("/", 1)[-1].split("?")[0].endswith("_test"):
     raise pytest.UsageError(
         "DATABASE_URL must point to a database whose name ends in '_test' (tests empty its tables)"

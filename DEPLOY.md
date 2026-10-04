@@ -2,7 +2,7 @@
 
 | Phần | Dịch vụ | Ghi chú |
 |---|---|---|
-| Database | **Neon** (Postgres 17 + pgvector) | Gói Free 1 GB; dữ liệu sách ~135 MB |
+| Database | **Neon** (Postgres 18 + pgvector) | Gói Free 1 GB; dữ liệu sách ~135 MB |
 | Backend (FastAPI) | **Render**, `render.yaml` | Gói Free 512 MB; ngủ sau 15 phút không có request, lần đầu vào lại mất ~1 phút |
 | Frontend (Next.js) | **Vercel** | Gói Hobby; gọi backend qua `/api` (rewrite) nên cookie đăng nhập là first-party |
 
@@ -14,7 +14,7 @@ Chạy ở máy vẫn như cũ (`docker compose up`): compose chạy `--reload`,
 
 ## 1. Neon (database)
 
-1. Tạo project ở <https://console.neon.tech>: Postgres 17, region **AWS Asia Pacific (Singapore)** (cùng vùng với Render).
+1. Tạo project ở <https://console.neon.tech>: Postgres 17 trở lên, region **AWS Asia Pacific (Singapore)** (cùng vùng với Render).
 2. Lấy connection string **không có `-pooler`** (tắt "Connection pooling" khi copy), dạng
    `postgresql://USER:PASSWORD@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`.
 3. Tạo schema và chép dữ liệu sách từ máy (stack local phải đang chạy):
@@ -29,6 +29,11 @@ Chạy ở máy vẫn như cũ (`docker compose up`): compose chạy `--reload`,
    ```
 
    Lưu ý: SQLAlchemy cần tiền tố `postgresql+psycopg://`; `psql`/script chép dữ liệu dùng `postgresql://`.
+
+   Nếu dùng Neon CLI (`neon link`): nó ghi `DATABASE_URL` của Neon **đè lên `.env`**, làm bản chạy ở máy
+   chuyển sang Neon. Chuyển các dòng đó sang `.env.neon` (không commit) và trả `DATABASE_URL` của
+   `.env` về `postgresql+psycopg://<user>:<password>@db:5432/<db>`; với `neon deploy` dùng `--no-env-pull`.
+   Trong `.env.neon`, `DATABASE_URL_UNPOOLED` là kết nối trực tiếp cần dùng.
 
 ## 2. Email (mã OTP đăng ký, quên mật khẩu)
 
