@@ -49,6 +49,10 @@ services:
       LLM_REASONING_EFFORT: ${LLM_REASONING_EFFORT:-}
       LLM_MAX_RETRY_WAIT_SECONDS: ${LLM_MAX_RETRY_WAIT_SECONDS:-20}
       QA_TOP_K: ${QA_TOP_K:-6}
+      # Empty = the default in src/core/config.py
+      RETRIEVAL_METHOD: ${RETRIEVAL_METHOD:-}
+      RETRIEVAL_SCOPE: ${RETRIEVAL_SCOPE:-}
+      RETRIEVAL_RERANK: ${RETRIEVAL_RERANK:-}
       # Bind mounts from Windows/macOS hosts don't propagate inotify events
       WATCHFILES_FORCE_POLLING: "true"
     ports:

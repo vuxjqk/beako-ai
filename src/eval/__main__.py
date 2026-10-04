@@ -3,6 +3,8 @@
     check                       validate the golden set's evidence locations against the database
     show ID [ID ...]            print questions with their evidence text, for reading by a person
     retrieval [--label L]       retrieval metrics only (no LLM; run after every change)
+                                --set key=value overrides a RetrievalConfig field, e.g.
+                                --set method=hybrid scope=true
     generation [--label L]      full QA + LLM judge (uses quota; --resume DIR continues a stopped run)
     report                      rebuild data/reports/eval_report.md from all saved runs
 
@@ -14,6 +16,7 @@ from pathlib import Path
 
 from src.eval import generation, golden, report, retrieval
 from src.models import SessionLocal
+from src.services.retrieval import default_config
 
 
 def main() -> None:
@@ -26,11 +29,13 @@ def main() -> None:
     p.add_argument("--label")
     p.add_argument("--depth", type=int, default=retrieval.DEPTH)
     p.add_argument("--only", nargs="*", help="question ids (default: all)")
+    p.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="retrieval setting overrides")
     p = sub.add_parser("generation")
     p.add_argument("--label")
     p.add_argument("--judge-model", help="default: LLM_MODEL")
     p.add_argument("--pause", type=float, default=4.0, help="seconds between LLM calls (free-tier rate limits)")
     p.add_argument("--resume", type=Path, help="run directory to continue")
+    p.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="retrieval setting overrides")
     p.add_argument("--only", nargs="*", help="question ids (default: all)")
     sub.add_parser("report")
     args = ap.parse_args()
@@ -56,12 +61,17 @@ def main() -> None:
                 print()
             return
         if args.cmd == "retrieval":
-            r = retrieval.run(db, args.label, args.depth, set(args.only or []))
-            s = r["summary"]["overall"]
-            print(f"n={s['n']} hit@6={s['hit@6']:.3f} hit@20={s['hit@20']:.3f} mrr={s['mrr']:.3f} "
-                  f"span_recall@20={s['span_recall@20']:.3f} fingerprint={r['fingerprint']}")
+            cfg = default_config().with_overrides(args.set)
+            r = retrieval.run(db, args.label, cfg, args.depth, set(args.only or []))
+            # Only dev is printed: decisions are made on dev, test is read in the report at the end
+            s = r["summary"]["dev"]["overall"]
+            print(f"[{cfg.label()}] dev n={s['n']} hit@6={s['hit@6']:.3f} hit@20={s['hit@20']:.3f} "
+                  f"mrr={s['mrr']:.3f} span_recall@20={s['span_recall@20']:.3f} "
+                  f"latency={r['summary']['latency_ms_avg']}ms fingerprint={r['fingerprint']}")
         else:
-            r = generation.run(db, args.label, args.judge_model, args.pause, args.resume, set(args.only or []))
+            cfg = default_config().with_overrides(args.set)
+            r = generation.run(db, args.label, args.judge_model, args.pause, cfg, args.resume,
+                               set(args.only or []))
             i, o = r["summary"]["in_scope"], r["summary"]["out_of_scope"]
             print(f"score={i['score']} correct={i['correct']} false_refusal={i['false_refusal']} "
                   f"oos_handled={o['handled']} errors={r['summary']['errors']}")

@@ -1,7 +1,6 @@
-"""Baseline question answering: vector retrieval over book_chunks + one LLM call.
+"""Question answering: retrieval over book_chunks + one LLM call.
 
-Deliberately simple (no query rewriting, no keyword fusion, no reranking, English only) so it
-can serve as the reference point for later improvements.
+Retrieval is configured by RetrievalConfig (src/services/retrieval.py); English only.
 """
 
 import re
@@ -12,8 +11,9 @@ from dataclasses import dataclass, field
 from sqlalchemy.orm import Session
 
 from src.core import config
-from src.ingest.search import Hit, vector_search
-from src.services import llm
+from src.ingest.search import Hit
+from src.services import llm, retrieval
+from src.services.retrieval import RetrievalConfig
 
 NOT_FOUND = "Not found in the provided passages."
 
@@ -74,21 +74,18 @@ def cited_numbers(text: str, limit: int) -> set[int]:
     return {n for n in nums if 1 <= n <= limit}
 
 
-# Recorded with every evaluation run; change it whenever retrieve() changes behaviour
-RETRIEVAL_METHOD = "vector"
-
-
-def retrieve(db: Session, question: str, k: int) -> list[Hit]:
+def retrieve(db: Session, question: str, k: int, cfg: RetrievalConfig | None = None) -> list[Hit]:
     """The retrieval step of answer_question, also called by the evaluation (src.eval)."""
-    return vector_search(db.connection(), get_embedder(), question, k=k)
+    return retrieval.retrieve(db.connection(), get_embedder(), question, k, cfg or retrieval.default_config())
 
 
-def answer_question(db: Session, question: str, top_k: int | None = None) -> Answer:
+def answer_question(db: Session, question: str, top_k: int | None = None,
+                    cfg: RetrievalConfig | None = None) -> Answer:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
     k = top_k or config.QA_TOP_K
     t0 = time.perf_counter()
-    hits = retrieve(db, question, k)
+    hits = retrieve(db, question, k, cfg)
     t1 = time.perf_counter()
     completion = llm.chat(SYSTEM_PROMPT, build_prompt(question, hits))
     t2 = time.perf_counter()

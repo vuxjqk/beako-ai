@@ -43,3 +43,12 @@ LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 # Longest provider-requested back-off (429/503) a request will sit through before failing
 LLM_MAX_RETRY_WAIT_SECONDS = float(os.getenv("LLM_MAX_RETRY_WAIT_SECONDS", "20"))
 QA_TOP_K = int(os.getenv("QA_TOP_K", "6"))
+# Retrieval for QA (see src/services/retrieval.py; measure changes with python -m src.eval retrieval)
+RETRIEVAL_METHOD = os.getenv("RETRIEVAL_METHOD") or "hybrid"  # vector | keyword | hybrid
+RETRIEVAL_KEYWORD = os.getenv("RETRIEVAL_KEYWORD", "bm25")  # bm25 | ts
+RETRIEVAL_CANDIDATES = int(os.getenv("RETRIEVAL_CANDIDATES", "100"))
+RETRIEVAL_RRF_K = int(os.getenv("RETRIEVAL_RRF_K", "60"))
+RETRIEVAL_EXACT = os.getenv("RETRIEVAL_EXACT", "false").lower() == "true"
+RETRIEVAL_SCOPE = os.getenv("RETRIEVAL_SCOPE") or "boost"  # off | filter | boost
+RETRIEVAL_RERANK = os.getenv("RETRIEVAL_RERANK", "")  # cross-encoder model name; empty = off
+RETRIEVAL_RERANK_TOP = int(os.getenv("RETRIEVAL_RERANK_TOP", "20"))

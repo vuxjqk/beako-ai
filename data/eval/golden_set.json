@@ -1,10 +1,11 @@
 {
   "version": 1,
-  "description": "Golden question set for the Re:ZERO QA system. Evidence locations are volume + chapter + an inclusive range of book_paragraphs.seq (reading order within the volume), so they stay valid when the text is re-chunked. Every span was located and read in the extracted text; run `python -m src.eval show <id>` to print it.",
+  "description": "Golden question set for the Re:ZERO QA system. Evidence locations are volume + chapter + an inclusive range of book_paragraphs.seq (reading order within the volume), so they stay valid when the text is re-chunked. Every span was located and read in the extracted text; run `python -m src.eval show <id>` to print it. Each question has a split: tune retrieval/prompts on \"dev\" only; \"test\" (chosen by hashing ids, stratified by category) is for confirming a change, not for tuning it.",
   "questions": [
     {
       "id": "fact-01",
       "category": "fact",
+      "split": "dev",
       "question": "In Volume 1, Chapter 2, Subaru goes back to the loot house and is killed there. Who kills him and how?",
       "answer": "Elsa (the Bowel Hunter) kills him: she slices about 70 percent of the way through his abdomen with a second kukri knife, spilling his blood and guts.",
       "key_points": ["Elsa", "cut open his abdomen/stomach with a kukri"],
@@ -13,6 +14,7 @@
     {
       "id": "fact-02",
       "category": "fact",
+      "split": "dev",
       "question": "What name does Subaru give to the power that sends him back in time when he dies?",
       "answer": "He calls it \"Return by Death\", saying it fits him because it is a power that assumes he is going to lose.",
       "key_points": ["Return by Death"],
@@ -21,6 +23,7 @@
     {
       "id": "fact-03",
       "category": "fact",
+      "split": "dev",
       "question": "When Subaru first asks the silver-haired girl her name in Volume 1, what name does she give him?",
       "answer": "She says she has no last name and he can just call her \"Satella\" (a false name).",
       "key_points": ["Satella"],
@@ -29,6 +32,7 @@
     {
       "id": "fact-04",
       "category": "fact",
+      "split": "dev",
       "question": "At the end of Volume 1, after Subaru saves her, what real name does the silver-haired girl tell him?",
       "answer": "Emilia: \"My name is Emilia. Just Emilia,\" thanking him for saving her.",
       "key_points": ["Emilia"],
@@ -37,6 +41,7 @@
     {
       "id": "fact-05",
       "category": "fact",
+      "split": "dev",
       "question": "How does Subaru die for the third time in Volume 1, in the alley in Chapter 3?",
       "answer": "One of the three thugs (\"Dumber\") stabs him in the back with a knife as he tries to push past them out of the alley; the wound is fatal.",
       "key_points": ["stabbed in the back with a knife", "by one of the thugs in the alley"],
@@ -45,6 +50,7 @@
     {
       "id": "fact-06",
       "category": "fact",
+      "split": "dev",
       "question": "What belongings did Subaru have with him when he was summoned to the other world?",
       "answer": "A cell phone that was low on battery, a wallet full of video rental membership cards, and a convenience store bag with a cup of instant ramen and snacks (corn-soup flavored chips).",
       "key_points": ["cell phone", "wallet", "convenience store bag with instant ramen / snacks"],
@@ -53,6 +59,7 @@
     {
       "id": "fact-07",
       "category": "fact",
+      "split": "test",
       "question": "What nickname is the assassin Elsa known by, as identified by Reinhard in Volume 1?",
       "answer": "The \"Bowel Hunter\"; she introduces herself as Elsa \"The Bowel Hunter\" Gramhilde.",
       "key_points": ["Bowel Hunter"],
@@ -61,6 +68,7 @@
     {
       "id": "fact-08",
       "category": "fact",
+      "split": "dev",
       "question": "In Volume 2, what weapon does Rem use against Subaru in the forest, the same weapon that had already killed him in an earlier loop?",
       "answer": "A morning star: a spiked iron ball the size of a man's skull on a long chain.",
       "key_points": ["morning star", "spiked iron ball on a chain"],
@@ -69,6 +77,7 @@
     {
       "id": "fact-09",
       "category": "fact",
+      "split": "dev",
       "question": "In Volume 3, what does Subaru conclude was the source of the curse that kept killing people from Roswaal Manor?",
       "answer": "The puppy the children of Earlham Village played with. It was really a demon beast that curses whoever it bites, and it had bitten Subaru.",
       "key_points": ["the village children's puppy", "a demon beast that curses by biting"],
@@ -77,6 +86,7 @@
     {
       "id": "fact-10",
       "category": "fact",
+      "split": "dev",
       "question": "According to Rem's interlude in Volume 3, how did Ram lose her horn?",
       "answer": "When their demon village was attacked and set on fire, Ram shielded Rem and took the blow meant for her, and her horn was severed.",
       "key_points": ["village attacked/burned", "Ram shielded Rem", "horn severed"],
@@ -85,6 +95,7 @@
     {
       "id": "fact-11",
       "category": "fact",
+      "split": "dev",
       "question": "What is the name of Crusch Karsten's blessing (divine protection)?",
       "answer": "The blessing of wind reading. Combined with wind magic, it powers her technique One Blow, One Hundred Felled.",
       "key_points": ["wind reading"],
@@ -93,6 +104,7 @@
     {
       "id": "fact-12",
       "category": "fact",
+      "split": "dev",
       "question": "How does Petelgeuse Romanée-Conti introduce his title to Subaru in the cave in Volume 5?",
       "answer": "As the Witch Cult's Archbishop of Sin, \"entrusted with the duties of Sloth\".",
       "key_points": ["Archbishop of the Witch Cult", "Sloth"],
@@ -101,6 +113,7 @@
     {
       "id": "fact-13",
       "category": "fact",
+      "split": "test",
       "question": "In Volume 6, Subaru begs Rem to run away with him. How does Rem respond, and what does Subaru then tell her?",
       "answer": "Rem refuses to run away. She tells him she loves him and proposes that they start over \"from zero\". Subaru then admits he likes Emilia and asks Rem to help him save Emilia, and Rem accepts.",
       "key_points": ["Rem refuses to run away", "she says she loves him / start over from zero", "Subaru says he likes Emilia", "he asks for her help and she accepts"],
@@ -109,6 +122,7 @@
     {
       "id": "fact-14",
       "category": "fact",
+      "split": "test",
       "question": "In Volume 7, what does Subaru offer Crusch in return for an alliance between Emilia and Crusch?",
       "answer": "The magic crystal mining rights in the Great Elior Forest, plus information on the time and place the White Whale will appear, meaning the honor of hunting it down.",
       "key_points": ["magic crystal mining rights in the Elior Forest", "information on when/where the White Whale appears"],
@@ -117,6 +131,7 @@
     {
       "id": "fact-15",
       "category": "fact",
+      "split": "dev",
       "question": "Who delivers the final blow to the White Whale, and how is the whale brought down?",
       "answer": "Wilhelm van Astrea, the Sword Devil. The Great Flugel Tree is toppled onto the whale to pin it, Wilhelm dives on it with a borrowed treasured sword (dedicating it to his wife Theresia), and finally cuts it in two.",
       "key_points": ["Wilhelm", "Great Flugel Tree felled onto it", "cut it in two"],
@@ -125,6 +140,7 @@
     {
       "id": "fact-16",
       "category": "fact",
+      "split": "dev",
       "question": "How does Petelgeuse finally die in Volume 9?",
       "answer": "Julius strikes his chest with a rainbow sword wrapped in quasi-spirits. Petelgeuse then lashes an Unseen Hand at the sky, gouges the cliff, and is crushed by the resulting rock slide.",
       "key_points": ["Julius's rainbow (spirit) sword strikes him", "crushed by a rock slide he caused with his own Unseen Hand"],
@@ -133,6 +149,7 @@
     {
       "id": "fact-17",
       "category": "fact",
+      "split": "test",
       "question": "What does Otto Suwen's blessing allow him to do?",
       "answer": "It is the blessing of language: he can converse with and understand the voices of animals and other living creatures that cannot speak human language, such as land dragons, birds and bugs.",
       "key_points": ["blessing of language", "talk with / hear animals and creatures"],
@@ -141,6 +158,7 @@
     {
       "id": "fact-18",
       "category": "fact",
+      "split": "test",
       "question": "What blessing does Garfiel have, and what does it give him in battle?",
       "answer": "The blessing of earth spirit, which gives him extraordinary recuperative power.",
       "key_points": ["blessing of earth spirit", "recovery / regeneration"],
@@ -149,6 +167,7 @@
     {
       "id": "fact-19",
       "category": "fact",
+      "split": "test",
       "question": "Who is affected by the barrier around the Sanctuary, and what does it do to them?",
       "answer": "People of mixed blood (half-bloods, the 'mixed'). The barrier makes them lose consciousness on contact and keeps them sealed inside the Sanctuary. Outsiders without mixed blood are only led astray in the forest.",
       "key_points": ["people of mixed blood / half-bloods", "seals them inside / they cannot leave", "knocks them unconscious on contact"],
@@ -157,6 +176,7 @@
     {
       "id": "fact-20",
       "category": "fact",
+      "split": "dev",
       "question": "What are the three Trials of the Sanctuary tomb?",
       "answer": "First, face your past (a past linked to the challenger's greatest regret). Second, behold the unknowable present (a present that does not exist). Third, face the calamity that shall come (a future the challenger must confront).",
       "key_points": ["face your past", "behold the unknowable present", "face the calamity that shall come / the future"],
@@ -165,6 +185,7 @@
     {
       "id": "fact-21",
       "category": "fact",
+      "split": "test",
       "question": "How is Elsa killed during the attack on Roswaal Manor in Volume 15?",
       "answer": "Garfiel kills her: after they bite each other's necks, he hoists the massive body of a Rock Pig and hurls it, crushing her completely.",
       "key_points": ["Garfiel", "crushed by the hurled Rock Pig"],
@@ -173,6 +194,7 @@
     {
       "id": "fact-22",
       "category": "fact",
+      "split": "dev",
       "question": "According to Echidna, what is the Great Rabbit and who left it behind?",
       "answer": "A demon beast that is really a horde of rabbits, one of the three great demon beasts. It is a negative legacy left by Daphne, the Witch of Gluttony.",
       "key_points": ["one of the three great demon beasts", "a horde (plural)", "left by Daphne, the Witch of Gluttony"],
@@ -181,6 +203,7 @@
     {
       "id": "fact-23",
       "category": "fact",
+      "split": "dev",
       "question": "How does Regulus Corneas die in Volume 19?",
       "answer": "Reinhard's blow drives him deep into the ground while his Lion Heart (time-stop invincibility) is active. Underground he has to release it so his heart can beat, digs toward the surface, and drowns when water floods the narrow passage.",
       "key_points": ["knocked/driven underground by Reinhard", "has to release Lion Heart", "drowns"],
@@ -189,6 +212,7 @@
     {
       "id": "fact-24",
       "category": "fact",
+      "split": "test",
       "question": "What is the full name and sin of the Archbishop who introduces herself at the end of Volume 16 in Pristella, charged with Wrath?",
       "answer": "Sirius Romanée-Conti, Archbishop of the Seven Deadly Sins charged with Wrath.",
       "key_points": ["Sirius Romanée-Conti", "Wrath"],
@@ -197,6 +221,7 @@
     {
       "id": "fact-25",
       "category": "fact",
+      "split": "test",
       "question": "What full name does the Archbishop of Lust use to introduce herself in Volume 17?",
       "answer": "Capella Emerada Lugunica.",
       "key_points": ["Capella Emerada Lugunica"],
@@ -205,6 +230,7 @@
     {
       "id": "fact-26",
       "category": "fact",
+      "split": "dev",
       "question": "Which two Archbishops attack Crusch and Rem's convoy as it returns with the White Whale's head?",
       "answer": "Regulus Corneas, Archbishop of Greed, and Lye Batenkaitos, Archbishop of Gluttony.",
       "key_points": ["Regulus Corneas (Greed)", "Lye Batenkaitos (Gluttony)"],
@@ -213,6 +239,7 @@
     {
       "id": "fact-27",
       "category": "fact",
+      "split": "test",
       "question": "What does Reid Astrea, the first Sword Saint, fight with when he faces the group in the Pleiades Watchtower?",
       "answer": "Chopsticks. He says there is nothing he can't cut with them.",
       "key_points": ["chopsticks"],
@@ -221,6 +248,7 @@
     {
       "id": "fact-28",
       "category": "fact",
+      "split": "dev",
       "question": "When Subaru wakes up with amnesia in the Pleiades Watchtower in Volume 23, what is the last thing he remembers?",
       "answer": "Walking out of the convenience store. Everything since being summoned to the other world is gone from his memory.",
       "key_points": ["leaving the convenience store", "no memories of anything after being summoned"],
@@ -229,6 +257,7 @@
     {
       "id": "fact-29",
       "category": "fact",
+      "split": "dev",
       "question": "In what state does Rem wake up at the start of Volume 26?",
       "answer": "She wakes up in a meadow with no memories at all. She does not know who Subaru is or who she herself is, and she is wary and hostile toward him.",
       "key_points": ["she is awake", "she has no memories / doesn't know who Subaru or she is", "wary of Subaru"],
@@ -237,6 +266,7 @@
     {
       "id": "fact-30",
       "category": "fact",
+      "split": "dev",
       "question": "Who does Abel reveal himself to be in Volume 27?",
       "answer": "Vincent Abelks, the seventy-seventh emperor of the Holy Volakian Empire, who has been removed from his throne.",
       "key_points": ["the emperor of Volakia (77th)", "deposed / removed from the throne"],
@@ -245,6 +275,7 @@
     {
       "id": "fact-31",
       "category": "fact",
+      "split": "dev",
       "question": "Who is Natsumi Schwartz, and why is that persona created in Volume 27?",
       "answer": "Subaru disguised as a woman. The soldiers of the city of Guaral have seen Subaru's face, so he turns himself into \"Natsumi Schwartz\" (as Flop was turned into Flora) to get through the city's gates.",
       "key_points": ["Subaru in disguise as a woman", "to get into Guaral because the soldiers know his face"],
@@ -253,6 +284,7 @@
     {
       "id": "fact-32",
       "category": "fact",
+      "split": "dev",
       "question": "Which sin does Regulus Corneas represent as an Archbishop of the Witch Cult?",
       "answer": "Greed.",
       "key_points": ["Greed"],
@@ -261,6 +293,7 @@
     {
       "id": "fact-33",
       "category": "fact",
+      "split": "dev",
       "question": "How does the mock duel between Subaru and Julius at the knights' training ground in Volume 4 go?",
       "answer": "It is completely one-sided. Julius beats Subaru into the dirt with a wooden sword, knocking his sword away again and again, while Subaru keeps getting up even though he has no chance of winning.",
       "key_points": ["one-sided defeat for Subaru", "Julius beats him with a wooden sword", "Subaru kept getting up / refused to give up"],
@@ -269,6 +302,7 @@
     {
       "id": "fact-34",
       "category": "fact",
+      "split": "dev",
       "question": "What happened to Julius after his fight with the Archbishop of Gluttony, Roy Alphard, in Pristella?",
       "answer": "Gluttony ate only his name: Julius stayed conscious, but nobody remembered Julius Juukulius anymore, except Subaru.",
       "key_points": ["his name was eaten by Gluttony", "everyone forgot him", "Subaru still remembers him", "he is still conscious"],
@@ -277,6 +311,7 @@
     {
       "id": "fact-35",
       "category": "fact",
+      "split": "dev",
       "question": "Why does Subaru's group set out for the Sage's Pleiades Watchtower in Volume 21, and how do they plan to cross the Auguria Dunes?",
       "answer": "To find a way to deal with the harm done by the Witch Cult's Gluttony (and Lust) in Pristella, above all to wake Rem, who was erased by Gluttony. Anastasia (actually Echidna, \"Foxidna\", posing as her) knows a secret path through the Auguria Dunes.",
       "key_points": ["to help the victims of Gluttony / wake Rem", "Anastasia (Foxidna) knows a secret route through the Auguria Dunes"],
@@ -285,6 +320,7 @@
     {
       "id": "rel-01",
       "category": "relationship",
+      "split": "dev",
       "question": "How are Ram and Rem related, and which of them is older?",
       "answer": "They are twin sisters of the demon (oni) race; Ram is the older twin and Rem the younger.",
       "key_points": ["twin sisters", "Ram is older"],
@@ -293,6 +329,7 @@
     {
       "id": "rel-02",
       "category": "relationship",
+      "split": "dev",
       "question": "Who was Wilhelm van Astrea's wife, and what was Wilhelm's surname before he married into the Astrea family?",
       "answer": "Theresia van Astrea, the previous Sword Saint. Wilhelm's old surname was Trias.",
       "key_points": ["Theresia van Astrea", "she was the previous Sword Saint", "Trias"],
@@ -301,6 +338,7 @@
     {
       "id": "rel-03",
       "category": "relationship",
+      "split": "test",
       "question": "How is Reinhard van Astrea related to Wilhelm and Theresia, and who are his parents?",
       "answer": "He is their first grandson: their son Heinkel married Louanna, and Reinhard is Heinkel and Louanna's son.",
       "key_points": ["grandson of Wilhelm and Theresia", "father Heinkel", "mother Louanna"],
@@ -309,6 +347,7 @@
     {
       "id": "rel-04",
       "category": "relationship",
+      "split": "dev",
       "question": "What is the relationship between Frederica Baumann and Garfiel?",
       "answer": "Frederica is Garfiel's older sister by blood. The two do not get along well.",
       "key_points": ["older sister / siblings", "not on good terms"],
@@ -317,6 +356,7 @@
     {
       "id": "rel-05",
       "category": "relationship",
+      "split": "dev",
       "question": "What is Beatrice's relationship to the Witch Echidna, and what task did Echidna leave her?",
       "answer": "Echidna, the Witch of Greed, is Beatrice's mother. She ordered Beatrice to guard the archive of forbidden books, filled with her knowledge, until \"That Person\" arrived to end her duty. Beatrice waited about four hundred years.",
       "key_points": ["Echidna is her mother", "guard the archive of forbidden books", "wait for That Person", "four hundred years"],
@@ -325,6 +365,7 @@
     {
       "id": "rel-06",
       "category": "relationship",
+      "split": "dev",
       "question": "In the royal selection announced in Volume 4, who is the knight of each candidate?",
       "answer": "Crusch Karsten: Felix Argyle. Priscilla Bariel: the mercenary Al. Anastasia Hoshin: Julius Juukulius. Felt: Reinhard van Astrea. Emilia: her self-declared knight, Subaru Natsuki.",
       "key_points": ["Crusch – Felix Argyle", "Priscilla – Al", "Anastasia – Julius", "Felt – Reinhard", "Emilia – Subaru (self-declared)"],
@@ -333,6 +374,7 @@
     {
       "id": "rel-07",
       "category": "relationship",
+      "split": "dev",
       "question": "Who is Joshua Juukulius to Julius, and why does Julius not remember him?",
       "answer": "Joshua is Julius's younger brother. He is one of Gluttony's nameless victims, lying in a coma; with his name eaten he has been forgotten, so Julius has no memory of having a brother. He knows the name and relationship only because Subaru told him.",
       "key_points": ["younger brother", "a nameless victim of Gluttony, in a coma", "Julius only knows because Subaru told him"],
@@ -341,6 +383,7 @@
     {
       "id": "rel-08",
       "category": "relationship",
+      "split": "dev",
       "question": "Who is Fortuna to Emilia, and how does Fortuna die in Emilia's memories of the Elior Forest?",
       "answer": "Fortuna is Emilia's mother. She is killed fighting Geuse, who pierces her chest with an Unseen Hand in front of Emilia.",
       "key_points": ["Emilia's mother", "killed by Geuse's Unseen Hand"],
@@ -349,6 +392,7 @@
     {
       "id": "rel-09",
       "category": "relationship",
+      "split": "test",
       "question": "What are the names of Subaru's father and mother, as seen during his first Trial in the Sanctuary?",
       "answer": "His father is Kenichi and his mother is Nahoko (Natsuki).",
       "key_points": ["Kenichi (father)", "Nahoko (mother)"],
@@ -357,6 +401,7 @@
     {
       "id": "rel-10",
       "category": "relationship",
+      "split": "test",
       "question": "In the short story \"Felt, Starting the Royal Selection from Zero\", who is Old Man Rom to Felt and where are they living?",
       "answer": "Rom is a bald giant old man who has looked after Felt since she was little and whom she clearly loves. They live in a mansion owned by Reinhard's family, now that Felt is a royal candidate.",
       "key_points": ["Rom is like family / her guardian figure", "they live in the Astrea (Reinhard's family) mansion"],
@@ -365,6 +410,7 @@
     {
       "id": "rel-11",
       "category": "relationship",
+      "split": "dev",
       "question": "Who does Beatrice form a contract with in Volume 15, and what does he say to persuade her?",
       "answer": "Subaru Natsuki. He tells her to \"pick me\", to choose him instead of waiting for That Person, and points out she always sat by the door wanting someone to take her outside. She becomes his contracted spirit.",
       "key_points": ["Subaru", "\"pick me\"", "she becomes his contracted spirit"],
@@ -373,6 +419,7 @@
     {
       "id": "rel-12",
       "category": "relationship",
+      "split": "dev",
       "question": "What are Ram's feelings toward Roswaal, according to Rem's interlude in Volume 3?",
       "answer": "Ram adores Roswaal. After losing her horn, her relationship with him is the only one she needs.",
       "key_points": ["Ram adores / loves Roswaal"],
@@ -381,6 +428,7 @@
     {
       "id": "rel-13",
       "category": "relationship",
+      "split": "dev",
       "question": "Who is Shaula, and who does she believe Subaru is?",
       "answer": "Shaula is the star guardian of the Pleiades Watchtower (whom outsiders call the Sage). She believes Subaru is her master, Flugel, the sage who planted the Great Flugel Tree, and calls herself his pupil.",
       "key_points": ["guardian of the Pleiades Watchtower", "thinks Subaru is her master", "master is Flugel"],
@@ -389,6 +437,7 @@
     {
       "id": "rel-14",
       "category": "relationship",
+      "split": "test",
       "question": "Which spirit is contracted with Emilia?",
       "answer": "Puck, a Great Spirit in the form of a small cat.",
       "key_points": ["Puck"],
@@ -397,6 +446,7 @@
     {
       "id": "multi-01",
       "category": "multi_hop",
+      "split": "dev",
       "question": "In Volume 1 Subaru dies three times before the loop in which he survives. Where does each death happen and what causes it?",
       "answer": "1) In the loot house, he is slashed almost in half by an attacker he never sees, with the silver-haired girl falling dead beside him. 2) Back in the loot house, Elsa slices open his abdomen. 3) In an alley, a thug stabs him in the back.",
       "key_points": ["first: loot house, slashed by an unseen attacker, the girl dies beside him", "second: loot house, Elsa cuts his abdomen", "third: alley, stabbed by a thug"],
@@ -405,6 +455,7 @@
     {
       "id": "multi-02",
       "category": "multi_hop",
+      "split": "test",
       "question": "Compare the Witch Cult Archbishops Subaru faces in the Mathers domain arc (Volumes 5–9) with those who attack the city of Pristella (Volumes 16–20): which sins are involved?",
       "answer": "In the Mathers domain arc the main enemy is Petelgeuse Romanée-Conti, Archbishop of Sloth. In Pristella there are several: Sirius Romanée-Conti (Wrath), Regulus Corneas (Greed), Capella Emerada Lugunica (Lust) and Roy Alphard (Gluttony).",
       "key_points": ["Volumes 5–9: Petelgeuse, Sloth", "Pristella: Sirius (Wrath)", "Regulus (Greed)", "Capella (Lust)", "Roy Alphard (Gluttony)"],
@@ -413,6 +464,7 @@
     {
       "id": "multi-03",
       "category": "multi_hop",
+      "split": "dev",
       "question": "Elsa tries to kill Subaru and Felt in Volume 1. Who stops her that time, and who finally kills her, when?",
       "answer": "In Volume 1, Reinhard van Astrea, the Sword Saint, fights and drives her off at the loot house. She returns in the attack on Roswaal Manor and is finally killed in Volume 15 by Garfiel, who crushes her by hurling a Rock Pig.",
       "key_points": ["Volume 1: Reinhard stops her", "Volume 15: Garfiel kills her", "crushed by a hurled Rock Pig"],
@@ -421,6 +473,7 @@
     {
       "id": "multi-04",
       "category": "multi_hop",
+      "split": "dev",
       "question": "How did Theresia van Astrea originally die, and what happened to her in Pristella?",
       "answer": "She was taken by the White Whale fourteen years before the subjugation, which is why Wilhelm hunted it for revenge. In Pristella her corpse was reanimated by a wicked power and made to fight, and her grandson Reinhard cut her down.",
       "key_points": ["killed by the White Whale 14 years earlier", "Wilhelm sought revenge", "her corpse was reanimated in Pristella", "Reinhard (her grandson) cut her down"],
@@ -429,6 +482,7 @@
     {
       "id": "multi-05",
       "category": "multi_hop",
+      "split": "dev",
       "question": "What happened to Rem after the battle against the White Whale?",
       "answer": "While escorting the White Whale's head back to the capital with Crusch's force, she was attacked by the Archbishops Regulus (Greed) and Lye Batenkaitos (Gluttony). Gluttony ate her name and memories: everyone except Subaru forgot her, and she fell into an endless sleep (\"Sleeping Princess\" symptoms).",
       "key_points": ["attacked by Gluttony (and Greed) on the way back", "her name / memories were eaten; people forgot her", "she sleeps and does not wake"],
@@ -437,6 +491,7 @@
     {
       "id": "multi-06",
       "category": "multi_hop",
+      "split": "test",
       "question": "Compare what Gluttony took from Crusch, from Rem and from Julius.",
       "answer": "Crusch lost her own memories but is still remembered by others. Rem was erased from everyone else's memories (name and memories eaten) and fell into an endless sleep. Julius had only his name eaten: he stays awake and keeps his memories, but no one except Subaru remembers him.",
       "key_points": ["Crusch: lost her own memories", "Rem: erased from others' memories and sleeping", "Julius: only his name eaten, still conscious, forgotten by others"],
@@ -445,6 +500,7 @@
     {
       "id": "multi-07",
       "category": "multi_hop",
+      "split": "test",
       "question": "Name the Witches Subaru meets through Echidna's tea parties in the Sanctuary and the sin each represents.",
       "answer": "Echidna (Greed), Typhon (Pride), Minerva (Wrath), Daphne (Gluttony), Carmilla (Lust) and Sekhmet (Sloth).",
       "key_points": ["Echidna – Greed", "Typhon – Pride", "Minerva – Wrath", "Daphne – Gluttony", "Carmilla – Lust", "Sekhmet – Sloth"],
@@ -453,6 +509,7 @@
     {
       "id": "multi-08",
       "category": "multi_hop",
+      "split": "dev",
       "question": "What was the outcome for the Archbishops after the battle of Pristella: which were killed and which captured?",
       "answer": "One Archbishop was killed and one captured: Regulus Corneas (Greed) died, drowning underground, and Sirius (Wrath) was captured. Gluttony and Lust were still at large.",
       "key_points": ["Regulus (Greed) killed", "Sirius (Wrath) captured", "one killed, one captured"],
@@ -461,6 +518,7 @@
     {
       "id": "multi-09",
       "category": "multi_hop",
+      "split": "dev",
       "question": "How does the relationship between Subaru and Julius change from their duel in Volume 4 to the events after Pristella?",
       "answer": "In Volume 4 Julius humiliates Subaru in a one-sided duel. In Volume 9 they fight side by side against Petelgeuse, and Julius finishes him with his rainbow sword. After Pristella, Gluttony eats Julius's name and Subaru is the only one who still remembers him; they banter as uneasy friends.",
       "key_points": ["Volume 4: Julius beats Subaru in a one-sided duel", "Volume 9: they defeat Petelgeuse together", "after Pristella: only Subaru remembers Julius"],
@@ -469,6 +527,7 @@
     {
       "id": "sum-01",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize the events of Volume 1 (Arc 1).",
       "answer": "Subaru is summoned from a convenience store trip to another world. He helps a silver-haired girl (who calls herself Satella) look for her stolen badge, and they track it to a loot house in the slums. He dies three times (twice in the loot house, Elsa disemboweling him the second time, once stabbed by thugs) and discovers he returns in time after each death, which he names Return by Death. In the final loop, Reinhard van Astrea fights off Elsa the Bowel Hunter, and the girl tells Subaru her real name, Emilia.",
       "key_points": ["summoned to another world", "helps the silver-haired girl find her stolen badge", "repeated deaths at the loot house and the alley", "names his power Return by Death", "Reinhard defeats Elsa", "learns her name is Emilia"],
@@ -477,6 +536,7 @@
     {
       "id": "sum-02",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize what happens to Subaru at Roswaal Manor in Volumes 2 and 3.",
       "answer": "Subaru works as a servant at Roswaal Manor and keeps dying across several loops: once from a curse, once killed by Rem with her morning star because she suspects him. He works out that a shaman's curse requires touch and that the puppy in Earlham Village is a demon beast that curses by biting. He then goes into the forest to save the cursed village children from the demon beasts.",
       "key_points": ["repeated deaths at the manor", "Rem kills him with her morning star in one loop", "the curse comes from the demon-beast puppy in the village", "he saves the children from the demon beasts"],
@@ -485,6 +545,7 @@
     {
       "id": "sum-03",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize the battle against the White Whale in Volume 7.",
       "answer": "Subaru wins an alliance with Crusch by offering the Elior Forest mining rights and his knowledge of when and where the White Whale will appear. A subjugation force led by Crusch, with Wilhelm and Anastasia's Iron Fangs mercenaries, fights the whale on the Liphas plains. They topple the Great Flugel Tree onto it, and Wilhelm, avenging his wife Theresia after fourteen years, cuts it in two.",
       "key_points": ["alliance with Crusch (mining rights + White Whale info)", "battle on the Liphas plains/highway", "Great Flugel Tree felled onto the whale", "Wilhelm kills it, avenging Theresia"],
@@ -493,6 +554,7 @@
     {
       "id": "sum-04",
       "category": "summary",
+      "split": "test",
       "question": "Summarize the Sanctuary arc (Volumes 10–15).",
       "answer": "Emilia and Subaru go to the Sanctuary, where a barrier holds everyone of mixed blood captive until someone clears the three Trials in Echidna's tomb (face the past, the unknowable present, and the coming calamity). Subaru meets Echidna and the other Witches at her tea parties. Meanwhile Roswaal Manor is attacked by Elsa, whom Garfiel finally kills. Emilia clears the Trials and the barrier is lifted, and Beatrice leaves her archive and contracts with Subaru after he asks her to \"pick me\".",
       "key_points": ["barrier traps those of mixed blood", "three Trials in the tomb", "Emilia clears the Trials and the barrier is lifted", "the manor is attacked; Garfiel kills Elsa", "Beatrice contracts with Subaru"],
@@ -501,6 +563,7 @@
     {
       "id": "sum-05",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize the Witch Cult's attack on the water city of Pristella (Volumes 16–20).",
       "answer": "Four Archbishops attack Pristella: Sirius (Wrath), Regulus (Greed), Capella (Lust) and Roy Alphard of Gluttony. Regulus is killed: driven underground by Reinhard, he drowns. Sirius is captured, while Gluttony and Lust remain at large. Gluttony eats Julius's name, so only Subaru remembers him, and Theresia's reanimated corpse is cut down by Reinhard.",
       "key_points": ["Archbishops of Wrath, Greed, Lust and Gluttony attack", "Regulus dies", "Sirius captured", "Julius's name eaten", "Theresia's corpse reanimated"],
@@ -509,6 +572,7 @@
     {
       "id": "sum-06",
       "category": "summary",
+      "split": "test",
       "question": "Summarize the journey to and the start of events in the Pleiades Watchtower (Volumes 21–23).",
       "answer": "To find a way to restore Gluttony's victims, above all Rem, Subaru's group crosses the Auguria Dunes by a secret route known to Anastasia (really Echidna posing as her). At the tower they meet Shaula, its guardian, who believes Subaru is her master Flugel. Inside, they face trials such as the first Sword Saint Reid Astrea, who fights with chopsticks. Then Subaru suddenly loses all memories from after leaving the convenience store.",
       "key_points": ["goal: restore Gluttony's victims / wake Rem", "secret route through the Auguria Dunes via Anastasia/Echidna", "Shaula thinks Subaru is Flugel", "Reid Astrea fights with chopsticks", "Subaru loses his memories"],
@@ -517,6 +581,7 @@
     {
       "id": "sum-07",
       "category": "summary",
+      "split": "test",
       "question": "Summarize the story of Wilhelm and Theresia told in Volume 7, Chapter 5.",
       "answer": "Young Wilhelm, obsessed with the sword, keeps meeting a girl who loves flowers and calls herself Theresia. She turns out to be the Sword Saint, whose feats win the civil war. Wilhelm, who swore to surpass her, challenges and defeats her at the ceremony meant to honor her, taking the sword from her. She chooses to live as a woman rather than as the Sword Saint, and they confess their love. Decades later, when he has slain the White Whale, he tells the dead Theresia that he loves her.",
       "key_points": ["they meet as a sword-obsessed youth and a flower-loving girl", "she is the Sword Saint", "he defeats her and takes the sword from her", "they become a couple / marry", "he says \"I love you\" after killing the White Whale"],
@@ -525,6 +590,7 @@
     {
       "id": "sum-08",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize Rem's backstory as told in her interlude in Volume 3.",
       "answer": "Ram and Rem were born as twins among the horned demons, for whom twins were abominations to be discarded. They survived because Ram showed tremendous talent, while Rem felt inferior in her shadow. When their village was attacked and burned, Ram shielded Rem and lost her horn. Rem blamed herself, and the twins ended up serving at Roswaal's mansion, where Rem devoted herself to protecting the place where her sister could be at ease.",
       "key_points": ["twins were considered abominations among demons", "Ram was a prodigy, Rem felt inferior", "village attacked; Ram lost her horn shielding Rem", "Rem's guilt; they came to Roswaal's mansion"],
@@ -533,6 +599,7 @@
     {
       "id": "sum-09",
       "category": "summary",
+      "split": "dev",
       "question": "Summarize how Subaru's adventure in the Volakian Empire begins (Volumes 26–27).",
       "answer": "Subaru ends up in Volakia with Rem, who wakes with no memories and distrusts him. They are separated and caught up with the imperial army. He meets Abel and the Shudrak tribe, and Abel turns out to be the deposed emperor of Volakia, Vincent Abelks. To infiltrate the city of Guaral, where soldiers know his face, Subaru disguises himself as a woman named Natsumi Schwartz.",
       "key_points": ["Rem wakes with no memories", "meets Abel and the Shudrak", "Abel is the deposed emperor of Volakia", "Subaru disguises himself as Natsumi Schwartz to enter Guaral"],
@@ -541,6 +608,7 @@
     {
       "id": "oos-01",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "general",
       "question": "What is the capital of France?",
       "answer": "Should decline: unrelated to the novels.",
@@ -549,6 +617,7 @@
     {
       "id": "oos-02",
       "category": "out_of_scope",
+      "split": "test",
       "oos_type": "general",
       "question": "Which country won the 2022 FIFA World Cup?",
       "answer": "Should decline: unrelated to the novels.",
@@ -557,6 +626,7 @@
     {
       "id": "oos-03",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "general",
       "question": "What is the worst-case time complexity of quicksort?",
       "answer": "Should decline: unrelated to the novels.",
@@ -565,6 +635,7 @@
     {
       "id": "oos-04",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "not_in_text",
       "question": "Who is the voice actress of Rem in the Re:ZERO anime?",
       "answer": "Should decline: anime production facts are not in the novel text.",
@@ -573,6 +644,7 @@
     {
       "id": "oos-05",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "not_in_text",
       "question": "What is Subaru's favorite Pokémon?",
       "answer": "Should decline: never mentioned.",
@@ -581,6 +653,7 @@
     {
       "id": "oos-06",
       "category": "out_of_scope",
+      "split": "test",
       "oos_type": "not_in_text",
       "question": "What did Subaru's mother do after he disappeared from Japan?",
       "answer": "Should decline: the novels (up to Volume 28) never show what happens in Japan after Subaru vanished; his parents only appear in his memories and the Trial.",
@@ -589,6 +662,7 @@
     {
       "id": "oos-07",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "false_premise",
       "question": "Why did Emilia become an Archbishop of the Witch Cult?",
       "answer": "Should decline or correct the premise: Emilia is a royal candidate, never an Archbishop.",
@@ -597,6 +671,7 @@
     {
       "id": "oos-08",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "false_premise",
       "question": "Why did Rem cut off Ram's horn when their village was attacked?",
       "answer": "Should decline or correct the premise: Ram lost her horn shielding Rem; Rem did not cut it off.",
@@ -605,6 +680,7 @@
     {
       "id": "oos-09",
       "category": "out_of_scope",
+      "split": "test",
       "oos_type": "false_premise",
       "question": "How did Beatrice die during the battle against the White Whale?",
       "answer": "Should decline or correct the premise: Beatrice did not take part in the White Whale battle and does not die.",
@@ -613,6 +689,7 @@
     {
       "id": "oos-10",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "false_premise",
       "question": "Which Archbishop of Pride did Subaru defeat in Pristella?",
       "answer": "Should decline or correct the premise: no Archbishop of Pride appears; the Pristella Archbishops were Wrath, Greed, Lust and Gluttony.",
@@ -621,6 +698,7 @@
     {
       "id": "oos-11",
       "category": "out_of_scope",
+      "split": "test",
       "oos_type": "false_premise",
       "question": "Why did Puck form a contract with Subaru instead of Emilia in Volume 1?",
       "answer": "Should decline or correct the premise: Puck is contracted with Emilia, not Subaru.",
@@ -629,6 +707,7 @@
     {
       "id": "oos-12",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "false_premise",
       "question": "In which volume does Subaru marry Rem, and who officiates the wedding?",
       "answer": "Should decline or correct the premise: Subaru does not marry Rem in the novels.",
@@ -637,6 +716,7 @@
     {
       "id": "oos-13",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "beyond_corpus",
       "question": "Who wins the royal selection and becomes the ruler of Lugunica?",
       "answer": "Should decline: the royal selection is not decided in Volumes 1–28.",
@@ -645,6 +725,7 @@
     {
       "id": "oos-14",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "false_premise",
       "question": "What divine protection did Subaru receive from the Sword Saint Reinhard after their duel in Volume 4?",
       "answer": "Should decline or correct the premise: Subaru's duel in Volume 4 was with Julius, and Reinhard grants him no divine protection.",
@@ -653,6 +734,7 @@
     {
       "id": "oos-15",
       "category": "out_of_scope",
+      "split": "dev",
       "oos_type": "not_in_text",
       "question": "What is the name of Subaru's younger sister in Japan?",
       "answer": "Should decline: no younger sister is mentioned.",

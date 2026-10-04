@@ -16,14 +16,15 @@ from sqlalchemy.orm import Session
 
 from src.eval import golden, runs
 from src.services.qa import get_embedder, retrieve
+from src.services.retrieval import RetrievalConfig
 
 KS = (6, 20)
 DEPTH = 50
 
 
-def evaluate_question(db: Session, q: golden.Question, depth: int) -> dict:
+def evaluate_question(db: Session, q: golden.Question, depth: int, cfg: RetrievalConfig) -> dict:
     t0 = time.perf_counter()
-    hits = retrieve(db, q.question, depth)
+    hits = retrieve(db, q.question, depth, cfg)
     ms = (time.perf_counter() - t0) * 1000
     refs = golden.chunk_refs(db, [h.row.id for h in hits])
     ranked = [h.row.id for h in hits]
@@ -40,6 +41,7 @@ def evaluate_question(db: Session, q: golden.Question, depth: int) -> dict:
     out = {
         "id": q.id,
         "category": q.category,
+        "split": q.split,
         "first_rank": first,
         "rr": 1 / first if first else 0.0,
         "span_ranks": span_rank,
@@ -66,9 +68,12 @@ def aggregate(results: list[dict]) -> dict:
         m["all_spans@20"] = round(sum(r["span_recall@20"] == 1 for r in rows) / n, 4)
         return m
 
-    out = {"overall": agg(results)}
-    for cat in golden.CATEGORIES[:-1]:
-        out[cat] = agg([r for r in results if r["category"] == cat])
+    out = {}
+    for split in golden.SPLITS + ("all",):
+        rows = [r for r in results if split == "all" or r["split"] == split]
+        out[split] = {"overall": agg(rows)}
+        for cat in golden.CATEGORIES[:-1]:
+            out[split][cat] = agg([r for r in rows if r["category"] == cat])
     out["latency_ms_avg"] = round(sum(r["latency_ms"] for r in results) / len(results), 1)
     return out
 
@@ -79,16 +84,20 @@ def fingerprint(results: list[dict]) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-def run(db: Session, label: str | None, depth: int = DEPTH, only: set[str] | None = None) -> dict:
+def run(db: Session, label: str | None, cfg: RetrievalConfig, depth: int = DEPTH,
+        only: set[str] | None = None) -> dict:
     questions, sha = golden.load()
     targets = [q for q in questions if q.in_scope and (not only or q.id in only)]
-    get_embedder()  # load the model before timing anything
+    get_embedder()  # load the models before timing anything
+    if targets:
+        evaluate_question(db, targets[0], depth, cfg)
+        db.rollback()
     run_dir = runs.new_run_dir("retrieval", label)
     record = runs.header("retrieval", label, sha, len(targets))
-    record["config"] = runs.retrieval_config(db, depth)
+    record["config"] = runs.retrieval_config(db, depth, cfg)
     results = []
     for q in targets:
-        results.append(evaluate_question(db, q, depth))
+        results.append(evaluate_question(db, q, depth, cfg))
         db.rollback()  # retrieve() sets a transaction-local ef_search; start each query clean
     record["summary"] = aggregate(results)
     record["fingerprint"] = fingerprint(results)

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from src.core import config
 from src.ingest.settings import MODEL_NAME
 from src.services import qa
+from src.services.retrieval import RetrievalConfig
 
 RUNS_DIR = Path("data/eval/runs")
 
@@ -41,12 +42,13 @@ def _code() -> dict:
     return {"commit": _commit(), "src_sha256": h.hexdigest()[:12]}
 
 
-def retrieval_config(db: Session, depth: int) -> dict:
+def retrieval_config(db: Session, depth: int, cfg: RetrievalConfig) -> dict:
     chunkers = db.execute(text(
         "SELECT chunker_version, embedding_model, count(*) FROM book_chunks GROUP BY 1, 2 ORDER BY 1, 2"
     )).all()
     return {
-        "method": qa.RETRIEVAL_METHOD,
+        "method": cfg.label(),
+        "settings": cfg.as_dict(),
         "embedding_model": MODEL_NAME,
         "qa_top_k": config.QA_TOP_K,
         "depth": depth,

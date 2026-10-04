@@ -36,17 +36,21 @@ def _retrieval_section(rruns: list[dict], questions: dict[str, golden.Question])
            "(cùng tập). Hit@k: có chunk đúng trong top k. MRR: trung bình 1/hạng của chunk đúng đầu tiên "
            "(0 nếu không có trong top độ sâu). Span recall@20: tỉ lệ vị trí bằng chứng của câu hỏi được phủ "
            "trong top 20 (câu nhiều phần cần đủ mọi phần). All spans@20: tỉ lệ câu được phủ đủ mọi phần.", "",
-           "| Lần chạy | Nhãn | Commit / mã `src` | Phương pháp | Embedding | Chunker (số chunk) | n | Hit@6 "
-           "| Hit@20 | MRR | Span recall@20 | All spans@20 | Vân tay kết quả |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "Chỉ số được tách theo split: **dev** dùng để chọn cấu hình, **test** chỉ để xác nhận thay đổi "
+           "đã chọn (không tinh chỉnh theo test).", "",
+           "| Lần chạy | Nhãn | Commit / mã `src` | Cấu hình truy xuất | Chunker (số chunk) | dev Hit@6 "
+           "| dev Hit@20 | dev MRR | dev Span recall@20 | test Hit@6 | test Hit@20 | test MRR | ms/câu "
+           "| Vân tay kết quả |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rruns:
-        c, s = r["config"], r["summary"]["overall"]
+        c, d, t = r["config"], r["summary"]["dev"]["overall"], r["summary"]["test"]["overall"]
         out.append(f"| {r['dir']} | {r.get('label') or ''} | `{r['code']['commit'] or '?'}` / "
-                   f"`{r['code']['src_sha256']}` | {c['method']} | `{c['embedding_model']}` "
-                   f"| {_chunkers(c)} | {s['n']} | {_pct(s['hit@6'])} | {_pct(s['hit@20'])} | {s['mrr']:.3f} "
-                   f"| {_pct(s['span_recall@20'])} | {_pct(s['all_spans@20'])} | `{r['fingerprint']}` |")
-    out += ["", "Mã `src` là hash của mọi file `src/**/*.py` lúc chạy, nên phân biệt được cả thay đổi chưa commit.",
-            ""]
+                   f"`{r['code']['src_sha256']}` | `{c['method']}` | {_chunkers(c)} "
+                   f"| {_pct(d['hit@6'])} | {_pct(d['hit@20'])} | {d['mrr']:.3f} | {_pct(d['span_recall@20'])} "
+                   f"| {_pct(t['hit@6'])} | {_pct(t['hit@20'])} | {t['mrr']:.3f} "
+                   f"| {r['summary']['latency_ms_avg']} | `{r['fingerprint']}` |")
+    out += ["", f"Embedding: `{rruns[-1]['config']['embedding_model']}`. Mã `src` là hash của mọi file "
+                "`src/**/*.py` lúc chạy, nên phân biệt được cả thay đổi chưa commit.", ""]
 
     # Determinism: runs with the same configuration must produce the same ranked lists
     groups: dict[tuple, list[dict]] = {}
@@ -63,13 +67,15 @@ def _retrieval_section(rruns: list[dict], questions: dict[str, golden.Question])
 
     latest = rruns[-1]
     out += [f"### Theo loại câu hỏi — {latest['dir']}", "",
-            "| Loại | n | Hit@6 | Hit@20 | MRR | Span recall@6 | Span recall@20 | All spans@20 |",
-            "|---|---|---|---|---|---|---|---|"]
-    for cat in golden.CATEGORIES[:-1] + ("overall",):
-        s = latest["summary"].get(cat)
-        if s and s["n"]:
-            out.append(f"| {cat} | {s['n']} | {_pct(s['hit@6'])} | {_pct(s['hit@20'])} | {s['mrr']:.3f} "
-                       f"| {_pct(s['span_recall@6'])} | {_pct(s['span_recall@20'])} | {_pct(s['all_spans@20'])} |")
+            "| Split | Loại | n | Hit@6 | Hit@20 | MRR | Span recall@6 | Span recall@20 | All spans@20 |",
+            "|---|---|---|---|---|---|---|---|---|"]
+    for split in golden.SPLITS:
+        for cat in golden.CATEGORIES[:-1] + ("overall",):
+            s = latest["summary"][split].get(cat)
+            if s and s["n"]:
+                out.append(f"| {split} | {cat} | {s['n']} | {_pct(s['hit@6'])} | {_pct(s['hit@20'])} "
+                           f"| {s['mrr']:.3f} | {_pct(s['span_recall@6'])} | {_pct(s['span_recall@20'])} "
+                           f"| {_pct(s['all_spans@20'])} |")
     out += ["", f"Độ trễ truy xuất trung bình: {latest['summary']['latency_ms_avg']} ms/câu "
                 f"(top {latest['config']['depth']}).", ""]
 
@@ -91,11 +97,11 @@ def _retrieval_section(rruns: list[dict], questions: dict[str, golden.Question])
     out += [f"### Chi tiết từng câu — {latest['dir']}", "",
             "Hạng của chunk đúng đầu tiên, và hạng đầu tiên phủ từng vị trí bằng chứng (– = không có trong top "
             f"{latest['config']['depth']}).", "",
-            "| Câu | Loại | Hạng đầu | Hạng theo vị trí | Câu hỏi |", "|---|---|---|---|---|"]
+            "| Câu | Split | Loại | Hạng đầu | Hạng theo vị trí | Câu hỏi |", "|---|---|---|---|---|---|"]
     for r in latest["results"]:
         spans = " / ".join(str(x) if x else "–" for x in r["span_ranks"])
         q = questions.get(r["id"])
-        out.append(f"| {r['id']} | {r['category']} | {r['first_rank'] or '–'} | {spans} "
+        out.append(f"| {r['id']} | {r['split']} | {r['category']} | {r['first_rank'] or '–'} | {spans} "
                    f"| {_short(q.question) if q else ''} |")
     return out + [""]
 
@@ -106,14 +112,15 @@ def _generation_section(gruns: list[dict], questions: dict[str, golden.Question]
            "(đúng / một phần / sai; điểm = đúng + 0,5 × một phần), **trung thực** chỉ so với các đoạn được trích. "
            "Từ chối nhầm: câu có đáp án nhưng hệ thống trả lời không tìm thấy. Câu ngoài phạm vi được tính là "
            "xử lý đúng khi hệ thống từ chối hoặc chỉ ra tiền đề sai.", "",
-           "| Lần chạy | Nhãn | Mô hình | Prompt | Giám khảo | Đủ | Điểm | Đúng | Một phần | Sai | Từ chối nhầm "
+           "| Lần chạy | Nhãn | Truy xuất | Mô hình | Prompt | Giám khảo | Đủ | Điểm | Đúng | Một phần | Sai | Từ chối nhầm "
            "| Bằng chứng trong ngữ cảnh | Trung thực | Trích chunk đúng | Ngoài phạm vi xử lý đúng | Token vào/ra "
            "| LLM ms |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in gruns:
         g, s = r["config"]["generation"], r["summary"]
         i, f, o, c = s["in_scope"], s["faithfulness"], s["out_of_scope"], s["cost"]
-        out.append(f"| {r['dir']} | {r.get('label') or ''} | `{g['model']}` | `{g['system_prompt_sha256']}` "
+        out.append(f"| {r['dir']} | {r.get('label') or ''} | `{r['config']['retrieval']['method']}` "
+                   f"| `{g['model']}` | `{g['system_prompt_sha256']}` "
                    f"| `{g['judge_model']}` | {'✅' if r.get('complete') else '⚠️ ' + str(s['errors']) + ' lỗi'} "
                    f"| {_pct(i['score'])} | {_pct(i['correct'])} | {_pct(i['partial'])} | {_pct(i['incorrect'])} "
                    f"| {_pct(i['false_refusal'])} | {_pct(i['gold_in_context'])} | {_pct(f['supported'])} "
@@ -132,7 +139,9 @@ def _generation_section(gruns: list[dict], questions: dict[str, golden.Question]
                          ("gold_not_in_context", "Bằng chứng KHÔNG có trong ngữ cảnh")):
         a = s["attribution"][where]
         out.append(f"| {label} | {a['correct']} | {a['partial']} | {a['incorrect']} | {a['refused']} | {a.get('empty', 0)} |")
-    out += ["", "| Loại | n | Đúng | Điểm |", "|---|---|---|---|"]
+    out += ["", "| Split / loại | n | Đúng | Điểm |", "|---|---|---|---|"]
+    for sp, v in s["by_split"].items():
+        out.append(f"| {sp} | {v['n']} | {_pct(v['correct'])} | {_pct(v['score'])} |")
     for cat, v in s["by_category"].items():
         out.append(f"| {cat} | {v['n']} | {_pct(v['correct'])} | {_pct(v['score'])} |")
     f, o, c = s["faithfulness"], s["out_of_scope"], s["cost"]
@@ -171,6 +180,9 @@ def build() -> Path:
     questions = {q.id: q for q in golden.load()[0]}
     rruns, gruns = runs.load_all("retrieval"), runs.load_all("generation")
     # Recompute summaries from the stored per-question results, so metric fixes apply to old runs
+    for r in rruns + gruns:  # runs from before the dev/test split: take it from the golden set
+        for res in r["results"]:
+            res["split"] = questions[res["id"]].split if res["id"] in questions else "dev"
     for r in rruns:
         r["summary"] = retrieval.aggregate(r["results"])
     for r in gruns:

@@ -26,6 +26,7 @@ from src.core import config
 from src.eval import golden, runs
 from src.services import llm
 from src.services.qa import answer_question, get_embedder
+from src.services.retrieval import RetrievalConfig
 
 JUDGE_MAX_TOKENS = 600
 # Stop (and leave the run resumable) after this many LLM failures in a row: usually quota
@@ -99,11 +100,13 @@ def _judge(prompt: str, model: str) -> tuple[dict, dict]:
     return _parse_json(c.text), c.usage
 
 
-def evaluate_question(db: Session, q: golden.Question, judge_model: str, pause: float) -> dict:
-    a = answer_question(db, q.question)
+def evaluate_question(db: Session, q: golden.Question, judge_model: str, pause: float,
+                      cfg: RetrievalConfig) -> dict:
+    a = answer_question(db, q.question, cfg=cfg)
     out = {
         "id": q.id,
         "category": q.category,
+        "split": q.split,
         "oos_type": q.oos_type,
         "answer": a.answer,
         "found": a.found,
@@ -208,6 +211,10 @@ def aggregate(results: list[dict]) -> dict:
         attribution[where] = {v: sum(1 for r in rows if r["verdict"] == v)
                               for v in ("correct", "partial", "incorrect", "refused", "empty")}
     s["attribution"] = attribution
+    s["by_split"] = {sp: {"n": len(rows), "correct": rate(rows, lambda r: r["verdict"] == "correct"),
+                          "score": round(sum({"correct": 1, "partial": 0.5}.get(r["verdict"], 0)
+                                             for r in rows) / len(rows), 4)}
+                     for sp in golden.SPLITS if (rows := [r for r in ins if r.get("split") == sp])}
     s["by_category"] = {c: {"n": len(rows), "correct": rate(rows, lambda r: r["verdict"] == "correct"),
                             "score": round(sum({"correct": 1, "partial": 0.5}.get(r["verdict"], 0)
                                                for r in rows) / len(rows), 4)}
@@ -216,7 +223,7 @@ def aggregate(results: list[dict]) -> dict:
     return s
 
 
-def run(db: Session, label: str | None, judge_model: str | None, pause: float,
+def run(db: Session, label: str | None, judge_model: str | None, pause: float, cfg: RetrievalConfig,
         resume: Path | None = None, only: set[str] | None = None) -> dict:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
@@ -232,10 +239,11 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float,
     else:
         run_dir = runs.new_run_dir("generation", label)
         record = runs.header("generation", label, sha, len(targets))
-        record["config"] = {"retrieval": runs.retrieval_config(db, config.QA_TOP_K),
+        record["config"] = {"retrieval": runs.retrieval_config(db, config.QA_TOP_K, cfg),
                             "generation": runs.generation_config(judge_model)}
         (run_dir / "header.json").write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
     judge_model = record["config"]["generation"]["judge_model"]  # a resumed run keeps its judge
+    cfg = RetrievalConfig(**record["config"]["retrieval"]["settings"]) if resume else cfg
 
     results_path = run_dir / "results.jsonl"
     done: dict[str, dict] = {}
@@ -250,7 +258,7 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float,
             if q.id in done:
                 continue
             try:
-                r = evaluate_question(db, q, judge_model, pause)
+                r = evaluate_question(db, q, judge_model, pause, cfg)
                 consecutive = 0
             except (llm.LLMError, ValueError) as e:
                 r = {"id": q.id, "category": q.category, "error": str(e)[:500]}

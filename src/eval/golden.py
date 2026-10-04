@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 GOLDEN_PATH = Path("data/eval/golden_set.json")
 CATEGORIES = ("fact", "relationship", "multi_hop", "summary", "out_of_scope")
 OOS_TYPES = ("general", "not_in_text", "false_premise", "beyond_corpus")
+# Tune on dev; test only confirms a change (otherwise rules get fitted to these questions)
+SPLITS = ("dev", "test")
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,7 @@ class Question:
     answer: str
     key_points: list[str]
     spans: list[Span]
+    split: str = "dev"
     oos_type: str | None = None
 
     @property
@@ -65,10 +68,12 @@ def load(path: Path = GOLDEN_PATH) -> tuple[list[Question], str]:
             raise ValueError(f"{q['id']}: out-of-scope questions have no evidence, all others need some")
         if q["category"] == "out_of_scope" and q.get("oos_type") not in OOS_TYPES:
             raise ValueError(f"{q['id']}: oos_type must be one of {OOS_TYPES}")
+        if q.get("split") not in SPLITS:
+            raise ValueError(f"{q['id']}: split must be one of {SPLITS}")
         if any(s.start > s.end for s in spans):
             raise ValueError(f"{q['id']}: evidence range start > end")
         questions.append(Question(q["id"], q["category"], q["question"], q["answer"],
-                                  q.get("key_points", []), spans, q.get("oos_type")))
+                                  q.get("key_points", []), spans, q["split"], q.get("oos_type")))
     return questions, hashlib.sha256(raw).hexdigest()
 
 
