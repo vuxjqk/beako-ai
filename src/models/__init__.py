@@ -10,6 +10,7 @@ from src.models.book import (
 )
 from src.models.conversation import Conversation, Message, MessageRole
 from src.models.database import Base, SessionLocal, engine, get_db
+from src.models.login_attempt import LoginAttempt
 from src.models.otp_code import OtpCode, OtpPurpose
 from src.models.qa_request import QaRequest
 from src.models.refresh_token import RefreshToken
@@ -31,6 +32,7 @@ __all__ = [
     "SessionLocal",
     "engine",
     "get_db",
+    "LoginAttempt",
     "OtpCode",
     "OtpPurpose",
     "QaRequest",

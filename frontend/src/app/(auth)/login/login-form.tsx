@@ -70,6 +70,13 @@ export function LoginForm({ next, notice }: { next: string; notice?: LoginNotice
           title: "Tài khoản đã bị vô hiệu hoá",
           text: "Vui lòng liên hệ quản trị viên để được hỗ trợ.",
         });
+      } else if (isStatus(error, 429)) {
+        const minutes = Math.max(1, Math.ceil((error.retryAfter ?? 900) / 60));
+        setProblem({
+          variant: "error",
+          title: "Đăng nhập sai quá nhiều lần",
+          text: `Tài khoản này tạm bị khoá đăng nhập. Vui lòng thử lại sau ${minutes} phút, hoặc đặt lại mật khẩu.`,
+        });
       } else {
         setProblem({
           variant: "error",

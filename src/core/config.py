@@ -23,6 +23,10 @@ AVATAR_MAX_BYTES = int(os.getenv("AVATAR_MAX_BYTES", str(2 * 1024 * 1024)))
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
+# Wrong passwords allowed per email (since its last successful login) within LOGIN_LOCK_MINUTES;
+# past that the email cannot log in until the oldest failure is LOGIN_LOCK_MINUTES old
+LOGIN_MAX_FAILURES = int(os.getenv("LOGIN_MAX_FAILURES", "10"))
+LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "15"))
 
 SMTP_HOST = os.environ["SMTP_HOST"]
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

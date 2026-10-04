@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -21,6 +21,7 @@ from src.schemas.auth import (
     UserResponse,
     VerifyEmailRequest,
 )
+from src.services import login_limit
 from src.services.otp import OtpCooldownError, consume_otp, issue_otp
 from src.services.session import (
     REFRESH_TOKEN_COOKIE,
@@ -33,10 +34,23 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=UserResponse)
-def login(body: LoginRequest, response: Response, db: Session = Depends(get_db)) -> User:
+def login(body: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)) -> User:
+    """Too many wrong passwords for one email answer 429 with Retry-After (see login_limit)."""
+    try:
+        login_limit.check(db, body.email)
+    except login_limit.TooManyAttempts as e:
+        db.rollback()
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS,
+                            "Too many failed logins; try again later or reset your password",
+                            headers={"Retry-After": str(e.retry_after)})
     user = db.scalar(select(User).where(User.email == body.email))
     password_ok = verify_password(body.password, user.password_hash if user else None)
-    if user is None or not password_ok or user.deleted_at is not None:
+    ok = user is not None and password_ok and user.deleted_at is None
+    # The browser's address as the proxy reports it; for the audit trail only
+    forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    ip = forwarded or (request.client.host if request.client else None)
+    login_limit.record(db, body.email, ok, ip[:64] if ip else None)
+    if not ok:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
     if not user.is_active:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Account is disabled")
