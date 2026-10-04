@@ -13,6 +13,9 @@ REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/auth")
 # OAuth client ID(s) the frontend uses for Google Sign-In; comma-separated if several
 GOOGLE_CLIENT_IDS = [c.strip() for c in os.getenv("GOOGLE_CLIENT_ID", "").split(",") if c.strip()]
 
+# Level of the app's own loggers (beako.*): DEBUG | INFO | WARNING
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
 # Local folder for uploaded files, relative to the working dir (/app in Docker)
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 AVATAR_MAX_BYTES = int(os.getenv("AVATAR_MAX_BYTES", str(2 * 1024 * 1024)))
