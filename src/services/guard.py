@@ -11,6 +11,7 @@ user cannot all slip past the limits.
 
 import logging
 import re
+import time
 import unicodedata
 import uuid
 from dataclasses import dataclass
@@ -27,6 +28,9 @@ log = logging.getLogger("beako.guard")
 
 # A "running" row older than this belongs to a crashed worker and no longer blocks the user
 STALE_RUNNING = "10 minutes"
+# How long a new question waits for the user's previous one to end before "busy": covers a
+# reload or a reopened tab, where the old stream is still being torn down
+BUSY_GRACE_SECONDS = 3.0
 
 # Start of today in QA_TIMEZONE, as a timestamptz
 DAY_START = "(date_trunc('day', now() AT TIME ZONE :tz) AT TIME ZONE :tz)"
@@ -139,12 +143,29 @@ def _refuse(db: Session, user: User, question: str, status: int, code: str, mess
     return Refused(status, code, message, retry_after)
 
 
+def _wait_for_slot(db: Session, user: User) -> None:
+    """Give a just-abandoned question (closed tab) a moment to be cancelled; the limit itself
+    is still checked under the lock in admit()."""
+    deadline = time.monotonic() + BUSY_GRACE_SECONDS
+    while time.monotonic() < deadline:
+        running = db.execute(text(f"""
+            SELECT count(*) FROM qa_requests WHERE user_id = :u AND status = 'running'
+              AND created_at > now() - interval '{STALE_RUNNING}'
+        """), {"u": user.id}).scalar()
+        db.rollback()  # each poll sees the latest commits
+        if running < config.QA_USER_MAX_CONCURRENT:
+            return
+        time.sleep(0.25)
+
+
 def admit(db: Session, user: User, question: str) -> Admission:
     """Admit a question or raise Refused. On success a "running" qa_requests row is committed."""
     if reason := check_question(question):
         raise _refuse(db, user, question, 400, "input_rejected",
                       "This question looks like an attempt to change the assistant's instructions", detail=reason)
 
+    if user.role != UserRole.ADMIN:
+        _wait_for_slot(db, user)
     db.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": _lock_key(user.id)})
     s = db.execute(text(f"""
         SELECT coalesce((SELECT sum(cost_usd) FROM qa_requests WHERE created_at >= {DAY_START}), 0) AS spent,

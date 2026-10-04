@@ -11,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from src.core import config
-from src.models import QaRequest
+from src.models import QaRequest, SessionLocal
 from src.services import llm
 from src.services.guard import DAY_START
 from src.services.qa import Answer
@@ -29,7 +29,7 @@ def cost_usd(prompt_tokens: int, completion_tokens: int) -> Decimal:
 def finish(db: Session, request_id: uuid.UUID, status: str, *, meter: llm.Meter | None = None,
            latency_ms: int | None = None, answer: Answer | None = None, message_id: uuid.UUID | None = None,
            error_kind: str | None = None, error: str | None = None, output_blocked: bool = False) -> None:
-    """Complete a request admitted by guard.admit(): answered | not_found | error | rejected.
+    """Complete a request admitted by guard.admit(): answered | not_found | error | cancelled | rejected.
     meter holds every LLM call the question made, even when it failed halfway."""
     row = db.get(QaRequest, request_id)
     if row is None:
@@ -59,6 +59,32 @@ def finish(db: Session, request_id: uuid.UUID, status: str, *, meter: llm.Meter 
     }))
 
 
+def mark_cancelled(request_id: uuid.UUID) -> None:
+    """The client left: free the user's question slot now, without waiting for the worker's
+    LLM call in flight (it stops at its next call, then finish() records the final tokens)."""
+    try:
+        with SessionLocal() as db:
+            db.execute(text("UPDATE qa_requests SET status = 'cancelled', error_kind = 'client_disconnected' "
+                            "WHERE id = :id AND status = 'running'"), {"id": request_id})
+            db.commit()
+    except Exception:  # noqa: BLE001 - the worker's own finish/release still closes the row
+        log.exception("could not mark request %s cancelled", request_id)
+
+
+def release(db: Session, request_id: uuid.UUID, meter: llm.Meter | None = None) -> None:
+    """Safety net, run when a question's work ends however it ends: a request still "running"
+    (finish() never ran, e.g. storing the answer failed) is closed as an error, so it stops
+    counting against the user's one-question-at-a-time limit."""
+    try:
+        db.rollback()
+        row = db.get(QaRequest, request_id)
+        if row is not None and row.status == "running":
+            finish(db, request_id, "error", meter=meter, error_kind="internal",
+                   error="released: the question ended without being logged")
+    except Exception:  # noqa: BLE001 - never mask the original failure; the row goes stale in 10 min
+        log.exception("could not release request %s", request_id)
+
+
 def _rate(part: int, whole: int) -> float | None:
     return round(part / whole, 4) if whole else None
 
@@ -74,6 +100,7 @@ def report(db: Session, days: int = 14) -> dict:
                count(*) FILTER (WHERE r.status = 'answered') AS answered,
                count(*) FILTER (WHERE r.status = 'not_found') AS not_found,
                count(*) FILTER (WHERE r.status = 'error') AS errors,
+               count(*) FILTER (WHERE r.status = 'cancelled') AS cancelled,
                count(*) FILTER (WHERE r.status = 'rejected') AS rejected,
                count(DISTINCT r.user_id) FILTER (WHERE r.status <> 'rejected') AS users,
                count(*) FILTER (WHERE r.mode LIKE '%agent%') AS agent,
@@ -129,7 +156,7 @@ def report(db: Session, days: int = 14) -> dict:
     issues = db.execute(text(f"""
         SELECT status, coalesce(CASE WHEN output_blocked THEN 'output_blocked' END, error_kind, '') AS kind,
                count(*) AS count
-        FROM qa_requests WHERE created_at >= {since} AND (status IN ('error', 'rejected') OR output_blocked)
+        FROM qa_requests WHERE created_at >= {since} AND (status IN ('error', 'cancelled', 'rejected') OR output_blocked)
         GROUP BY 1, 2 ORDER BY 3 DESC
     """), tz).mappings().all()
 

@@ -1,10 +1,11 @@
+import asyncio
 import json
 import logging
 import queue
 import threading
 import time
 import uuid
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -25,6 +26,7 @@ log = logging.getLogger("beako.qa")
 
 # Seconds between keep-alive comments while the answer is being prepared
 KEEPALIVE_SECONDS = 15
+POLL_SECONDS = 1.0
 # Safari buffers a stream until it has received about 1 KB; pad the start so status events show at once
 STREAM_PADDING = ":" + " " * 2048 + "\n\n"
 
@@ -77,21 +79,28 @@ def _admit(db: Session, user: User, body: AskRequest) -> tuple[guard.Admission, 
 
 
 def _answer(db: Session, conv: Conversation, adm: guard.Admission, body: AskRequest,
-            on_event=None) -> AskResponse:
-    """Answer, store the answer and complete the request log; raises QAFailed."""
+            on_event=None, cancel: threading.Event | None = None) -> AskResponse:
+    """Answer, store the answer and complete the request log; raises QAFailed. Setting `cancel`
+    stops the work at its next LLM call (the request is logged as cancelled)."""
     question, max_volume = body.question.strip(), body.max_volume
     t0 = time.perf_counter()
 
     def ms() -> int:
         return round((time.perf_counter() - t0) * 1000)
 
-    with llm.metered() as meter:
+    with llm.metered(cancel) as meter:
         try:
             result = answer_question(db, question, body.top_k, mode=adm.mode, max_volume=max_volume,
                                      on_event=on_event, token_budget=adm.token_budget)
         except llm.LLMError as e:
-            log.warning("answering failed (%s): %s", e.kind, e)
             db.rollback()
+            if e.kind == "cancelled":
+                log.info("client left; stopped answering after %d LLM calls (request %s)", meter.calls, adm.request_id)
+                conversations.save_error(db, conv, str(e), max_volume)
+                usage.finish(db, adm.request_id, "cancelled", meter=meter, latency_ms=ms(),
+                             error_kind="client_disconnected")
+                raise QAFailed(499, "cancelled", "The question was cancelled")
+            log.warning("answering failed (%s): %s", e.kind, e)
             conversations.save_error(db, conv, str(e), max_volume)
             usage.finish(db, adm.request_id, "error", meter=meter, latency_ms=ms(), error_kind=e.kind, error=str(e))
             code, message = LLM_FAILURES.get(e.kind, (502, "The AI provider could not answer; please try again"))
@@ -109,7 +118,14 @@ def _answer(db: Session, conv: Conversation, adm: guard.Admission, body: AskRequ
         log.warning("answer repeated the system prompt; replaced (request %s)", adm.request_id)
         result.answer, result.found = guard.REFUSAL, False
         result.sources = [{**src, "cited": False} for src in result.sources]
-    msg = conversations.save_answer(db, conv, result, max_volume)
+    try:
+        msg = conversations.save_answer(db, conv, result, max_volume)
+    except Exception as e:
+        # The LLM calls were made and paid for: log them before the error goes up
+        db.rollback()
+        usage.finish(db, adm.request_id, "error", meter=meter, latency_ms=ms(), answer=result,
+                     error_kind="internal", error=f"storing the answer failed: {type(e).__name__}: {e}")
+        raise
     usage.finish(db, adm.request_id, "answered" if result.found else "not_found", meter=meter,
                  latency_ms=ms(), answer=result, message_id=msg.id, output_blocked=blocked)
     return _response(conv, msg, result, max_volume)
@@ -129,6 +145,8 @@ def ask(
         return _answer(db, conv, adm, body)
     except QAFailed as e:
         raise e.http()
+    finally:
+        usage.release(db, adm.request_id)
 
 
 def _sse(event: str, data: dict) -> str:
@@ -147,17 +165,20 @@ def ask_stream(
     - answer: the final AskResponse (same body as POST /qa)
     - error: {"status": int, "code": str, "detail": str, "retryAfter": int | null}
     Guardrail refusals and a bad conversation id are plain HTTP errors (as for POST /qa) before
-    the stream starts. The answer is stored even if the client disconnects before it arrives."""
+    the stream starts. When the client disconnects (closes the tab) the work stops at its next
+    LLM call and the user's question slot is released, so asking again works at once."""
     adm, conv = _admit(db, user, body)
     max_volume = body.max_volume
     events: queue.Queue = queue.Queue()
+    cancel = threading.Event()
 
     def work() -> None:
         # Own session: the request's session is closed once the response starts streaming
         with SessionLocal() as wdb:
             conv_w = wdb.merge(conv)
             try:
-                response = _answer(wdb, conv_w, adm, body, on_event=lambda e: events.put(("status", e)))
+                response = _answer(wdb, conv_w, adm, body, on_event=lambda e: events.put(("status", e)),
+                                   cancel=cancel)
                 events.put(("answer", response.model_dump(mode="json", by_alias=True)))
             except QAFailed as e:
                 events.put(("error", e.event()))
@@ -165,22 +186,40 @@ def ask_stream(
                 log.exception("streaming answer failed")
                 events.put(("error", QAFailed(500, "internal", "Internal error while answering").event()))
             finally:
+                usage.release(wdb, adm.request_id)
                 events.put(None)
 
     threading.Thread(target=work, daemon=True, name="qa-stream").start()
 
-    def stream() -> Iterator[str]:
-        yield STREAM_PADDING
-        yield _sse("start", {"conversationId": str(conv.id), "maxVolume": max_volume})
-        while True:
-            try:
-                item = events.get(timeout=KEEPALIVE_SECONDS)
-            except queue.Empty:
-                yield ": keep-alive\n\n"
-                continue
-            if item is None:
-                return
-            yield _sse(*item)
+    async def stream() -> AsyncIterator[str]:
+        # Async so that a disconnect cancels it right away (Starlette cancels the response task),
+        # which runs the finally below
+        delivered = False
+        try:
+            yield STREAM_PADDING
+            yield _sse("start", {"conversationId": str(conv.id), "maxVolume": max_volume})
+            quiet = 0.0
+            while True:
+                try:
+                    # Short waits: a cancelled wait leaves its thread blocked for at most this long
+                    item = await asyncio.to_thread(events.get, True, POLL_SECONDS)
+                except queue.Empty:
+                    quiet += POLL_SECONDS
+                    if quiet >= KEEPALIVE_SECONDS:
+                        quiet = 0.0
+                        yield ": keep-alive\n\n"
+                    continue
+                if item is None:
+                    delivered = True
+                    return
+                quiet = 0.0
+                yield _sse(*item)
+        finally:
+            if not delivered:
+                # The client left (closed the tab): stop the work and free the user's slot at once.
+                # A thread, because this finally runs in a cancelled task and must not await
+                cancel.set()
+                threading.Thread(target=usage.mark_cancelled, args=(adm.request_id,), daemon=True).start()
 
     return StreamingResponse(stream(), media_type="text/event-stream", headers={
         # no-transform: proxies must not compress (and so buffer) the stream

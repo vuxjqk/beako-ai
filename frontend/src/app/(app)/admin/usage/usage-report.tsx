@@ -43,6 +43,7 @@ const ISSUE_LABELS: Record<string, string> = {
   user_quota: "Hết hạn mức ngày của người dùng",
   budget: "Hết ngân sách hệ thống",
   conversation_not_found: "Cuộc trò chuyện không tồn tại",
+  client_disconnected: "Người dùng rời trang giữa chừng (đã dừng)",
   output_blocked: "Câu trả lời lộ prompt (đã thay)",
   quota: "Nhà cung cấp hết quota",
   rate_limited_llm: "Nhà cung cấp giới hạn tốc độ",

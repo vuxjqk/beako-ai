@@ -28,9 +28,10 @@ class QaRequest(Base):
     # The stored answer (for its 👍/👎); null when refused or failed before answering
     message_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("qa_messages.id", ondelete="SET NULL"))
 
-    # running | answered | not_found | error | rejected
+    # running | answered | not_found | error | cancelled (client left mid-answer) | rejected
     status: Mapped[str] = mapped_column(String(16))
-    # rejected: why (rate_limited, user_quota, budget, input_rejected, ...); error: the LLM error kind
+    # rejected: why (rate_limited, user_quota, budget, input_rejected, ...); error: the LLM error kind;
+    # cancelled: client_disconnected
     error_kind: Mapped[str | None] = mapped_column(String(32))
     error: Mapped[str | None] = mapped_column(Text)
     question_chars: Mapped[int] = mapped_column(Integer)

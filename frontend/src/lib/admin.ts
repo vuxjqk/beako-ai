@@ -40,6 +40,8 @@ export type UsageDay = {
   answered: number;
   notFound: number;
   errors: number;
+  /** The user left mid-answer; the work was stopped */
+  cancelled: number;
   rejected: number;
   users: number;
   agent: number;
@@ -89,7 +91,7 @@ export type UsageReport = {
     tokens: number;
     costUsd: number;
   }[];
-  issues: { status: "error" | "rejected" | "answered" | "not_found"; kind: string | null; count: number }[];
+  issues: { status: "error" | "cancelled" | "rejected" | "answered" | "not_found"; kind: string | null; count: number }[];
 };
 
 /** Days of history the usage page offers; the first is the default. Backend max is 90. */

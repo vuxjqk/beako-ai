@@ -6,13 +6,14 @@ Gemini and OpenAI both speak this protocol, so switching provider is only a matt
 
 import json
 import re
+import threading
 import time
 import urllib.error
 import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.core import config
 
@@ -30,7 +31,7 @@ QUOTA_RE = re.compile(r"insufficient_quota|billing|PerDay|per day|exceeded your 
 
 class LLMError(Exception):
     """kind says what went wrong, for the user's message and the request log:
-    quota | rate_limited | unavailable | timeout | empty | rejected | not_configured | error"""
+    quota | rate_limited | unavailable | timeout | empty | rejected | not_configured | cancelled | error"""
 
     def __init__(self, message: str, kind: str = "error"):
         super().__init__(message)
@@ -51,6 +52,13 @@ class Meter:
     completion_tokens: int = 0
     retry_wait_s: float = 0.0
     model: str | None = None
+    # Set when nobody is waiting for the answer any more (the client disconnected): the next
+    # LLM call, or a retry back-off in progress, raises LLMError(kind="cancelled")
+    cancel: threading.Event = field(default_factory=threading.Event)
+
+    def check(self) -> None:
+        if self.cancel.is_set():
+            raise LLMError("cancelled: the client disconnected", "cancelled")
 
     def add(self, data: dict, model: str) -> None:
         u = data.get("usage") or {}
@@ -67,9 +75,10 @@ _meter: ContextVar[Meter | None] = ContextVar("llm_meter", default=None)
 
 
 @contextmanager
-def metered() -> Iterator[Meter]:
-    """Count the LLM calls made in this block (in this thread or task)."""
-    m = Meter()
+def metered(cancel: threading.Event | None = None) -> Iterator[Meter]:
+    """Count the LLM calls made in this block (in this thread or task); setting `cancel` stops
+    the work at its next LLM call."""
+    m = Meter(cancel=cancel or threading.Event())
     token = _meter.set(m)
     try:
         yield m
@@ -140,6 +149,8 @@ def _post(body: dict) -> dict:
     )
     meter = _meter.get()
     for attempt in range(RETRIES + 1):
+        if meter is not None:
+            meter.check()
         try:
             with urllib.request.urlopen(req, timeout=config.LLM_TIMEOUT_SECONDS) as resp:
                 data = json.load(resp)
@@ -158,7 +169,9 @@ def _post(body: dict) -> dict:
                     and waited + wait <= config.LLM_MAX_TOTAL_RETRY_SECONDS):
                 if meter is not None:
                     meter.retry_wait_s += wait
-                time.sleep(wait)
+                    meter.cancel.wait(wait)  # returns early when cancelled; checked at the loop top
+                else:
+                    time.sleep(wait)
                 continue
             raise err from e
         except TimeoutError as e:
