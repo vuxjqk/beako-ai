@@ -58,6 +58,8 @@ class Answer:
     mode: str = "simple"
     route_reason: str | None = None
     trace: list[dict] = field(default_factory=list)
+    # A follow-up rewritten to stand alone (src/services/followup.py); this is what was answered
+    standalone_question: str | None = None
 
 
 # Questions one search rarely answers: summaries, comparisons, changes over time, lists

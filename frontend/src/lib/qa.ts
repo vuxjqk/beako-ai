@@ -28,10 +28,13 @@ export type Answer = {
   timingsMs: { retrieval?: number; llm?: number };
   /** Agent steps: {step, llm} model calls and {step, tool, args} tool calls */
   trace: Record<string, unknown>[];
+  /** A follow-up as it was understood and answered, when it needed the earlier turns */
+  standaloneQuestion: string | null;
 };
 
 /** Progress reported while the answer is prepared (see POST /qa/stream). */
 export type StatusEvent =
+  | { type: "rewrite"; question: string }
   | { type: "route"; mode: "simple" | "agent"; reason: string | null }
   | { type: "llm"; step: number; final: boolean }
   | { type: "tool"; step: number; tool: string; args: Record<string, unknown>; new_passages?: number };

@@ -49,6 +49,8 @@ class AskResponse(CamelModel):
     mode: str  # simple | agent | simple+agent
     route_reason: str | None = None
     trace: list[dict] = []  # agent tool calls and per-step token use
+    # A follow-up as it was understood and answered, when it needed the earlier turns
+    standalone_question: str | None = None
     max_volume: int | None = None
     conversation_id: uuid.UUID | None = None
     message_id: uuid.UUID | None = None  # the stored answer; send feedback to it

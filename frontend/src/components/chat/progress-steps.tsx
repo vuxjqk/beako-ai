@@ -1,6 +1,16 @@
 "use client";
 
-import { BookOpen, Check, ChevronDown, List, PenLine, Search, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  Check,
+  ChevronDown,
+  List,
+  MessageSquareQuote,
+  PenLine,
+  Search,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
@@ -32,6 +42,8 @@ function book(args: Record<string, unknown>): string {
 /** One visible step for a progress event, or null for events that are not worth showing. */
 export function describe(event: StatusEvent): Step | null {
   switch (event.type) {
+    case "rewrite":
+      return { icon: MessageSquareQuote, text: `Hiểu câu hỏi là “${event.question}”` };
     case "route":
       return event.reason === "simple path found nothing"
         ? { icon: Sparkles, text: "Chưa thấy câu trả lời, đang tra cứu kỹ hơn" }

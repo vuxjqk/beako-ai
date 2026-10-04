@@ -30,7 +30,7 @@ from src.schemas.qa import (
     RenameConversationRequest,
     TurnFeedback,
 )
-from src.services import conversations, guard, llm, usage
+from src.services import conversations, followup, guard, llm, usage
 from src.services.qa import answer_question
 
 router = APIRouter(prefix="/qa", tags=["qa"])
@@ -100,10 +100,23 @@ def _answer(db: Session, conv: Conversation, adm: guard.Admission, body: AskRequ
     def ms() -> int:
         return round((time.perf_counter() - t0) * 1000)
 
+    # Earlier answered turns, for follow-ups ("and her sister?")
+    history = [(q.content, a.content) for q, a in conversations.turns(db, conv) if a is not None and not a.error]
+
     with llm.metered(cancel) as meter:
         try:
-            result = answer_question(db, question, body.top_k, mode=adm.mode, max_volume=max_volume,
-                                     on_event=on_event, token_budget=adm.token_budget)
+            asked = followup.standalone(question, history)
+            if asked != question and on_event:
+                on_event({"type": "rewrite", "question": asked})
+            remaining = None if adm.token_budget is None else \
+                adm.token_budget - meter.prompt_tokens - meter.completion_tokens
+            result = answer_question(db, asked, body.top_k, mode=adm.mode, max_volume=max_volume,
+                                     on_event=on_event, token_budget=remaining)
+            # The conversation keeps the user's words; the rewrite is shown and kept in the trace
+            result.question = question
+            if asked != question:
+                result.standalone_question = asked
+                result.trace = [{"rewrite": asked}, *result.trace]
         except llm.LLMError as e:
             db.rollback()
             if e.kind == "cancelled":
@@ -172,8 +185,9 @@ def ask_stream(
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     """Server-sent events while the question is answered:
-    - status: progress ({"type": "route" | "tool" | "llm", ...}; tool events carry the tool name
-      and arguments, e.g. a search query), shown as "searching / reading" steps
+    - status: progress ({"type": "rewrite" | "route" | "tool" | "llm", ...}; rewrite carries a
+      follow-up as it will be answered, tool events the tool name
+      and arguments (e.g. a search query); shown as "searching / reading" steps
     - answer: the final AskResponse (same body as POST /qa)
     - error: {"status": int, "code": str, "detail": str, "retryAfter": int | null}
     Guardrail refusals and a bad conversation id are plain HTTP errors (as for POST /qa) before
@@ -294,7 +308,8 @@ def _stored_answer(conv: Conversation, q: Message, a: Message) -> AskResponse:
     return AskResponse(question=q.content, answer=a.content, found=bool(a.found), sources=a.sources or [],
                        model=a.model or "", embedding_model=MODEL_NAME, usage=a.usage or {},
                        timings_ms=a.timings_ms or {}, mode=a.mode or "", trace=a.trace or [],
-                       max_volume=a.max_volume, conversation_id=conv.id, message_id=a.id)
+                       max_volume=a.max_volume, conversation_id=conv.id, message_id=a.id,
+                       standalone_question=next((t["rewrite"] for t in a.trace or [] if "rewrite" in t), None))
 
 
 @router.get("/conversations", response_model=ConversationPage)

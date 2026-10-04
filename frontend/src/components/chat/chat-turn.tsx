@@ -44,6 +44,11 @@ export function ChatTurn({ turn, onRetry }: { turn: Turn; onRetry?: () => void }
           {turn.question}
         </div>
       </div>
+      {answer?.standaloneQuestion && (
+        <p className="-mt-2 text-right text-xs text-muted-foreground">
+          Hiểu là: “{answer.standaloneQuestion}”
+        </p>
+      )}
 
       <div className="flex gap-3">
         <LogoMark className="mt-0.5 size-6 shrink-0" />
