@@ -200,6 +200,9 @@ class _Session:
     # --- tools ------------------------------------------------------------------------------
     def search(self, query: str, volumes: list[int] | None = None, chapter: int | None = None,
                short_story_collection: int | None = None) -> str:
+        # Models sometimes send a list of phrasings despite the string schema; search them as one
+        if isinstance(query, list):
+            query = " ".join(str(q) for q in query)
         scope = None
         if short_story_collection:
             scope = Scope("short_story_collection", (int(short_story_collection),))
