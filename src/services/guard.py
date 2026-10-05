@@ -108,8 +108,9 @@ def _words(s: str) -> list[str]:
 def _prompt_shingles() -> set[tuple[str, ...]]:
     shingles = set()
     for prompt in (qa.SYSTEM_PROMPT, agent.SYSTEM_PROMPT):
-        # Phrases an honest answer may well repeat are not evidence of a leak
-        for common in ("Re:ZERO -Starting Life in Another World-", qa.NOT_FOUND):
+        # Phrases an honest answer may well repeat are not evidence of a leak (an answer listing
+        # the sins with their English names can match the glossary)
+        for common in ("Re:ZERO -Starting Life in Another World-", qa.NOT_FOUND, agent.GLOSSARY_TEXT):
             prompt = prompt.replace(common, " | ")
         for part in prompt.split("|"):
             w = _words(part)

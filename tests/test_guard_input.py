@@ -43,7 +43,8 @@ def test_control_characters_are_refused():
 
 def test_answer_copying_the_system_prompt_is_a_leak():
     assert guard.leaks_prompt("Sure! " + qa.SYSTEM_PROMPT[60:400])
-    assert guard.leaks_prompt(agent.SYSTEM_PROMPT[300:700])
+    start = agent.SYSTEM_PROMPT.index("Where things are")
+    assert guard.leaks_prompt(agent.SYSTEM_PROMPT[start:start + 400])
 
 
 def test_normal_answers_are_not_leaks():
@@ -51,6 +52,10 @@ def test_normal_answers_are_not_leaks():
     # Phrases an answer may legitimately share with the prompt
     assert not guard.leaks_prompt('In the light novel series "Re:ZERO -Starting Life in Another World-", '
                                   "Rem is a maid. Not found in the provided passages.")
+    # A Vietnamese answer naming the sins as the glossary in the agent prompt does
+    assert not guard.leaks_prompt("Các Phù thủy gồm Echidna (Tham lam / Tham vọng = Greed), Minerva (Phẫn nộ = Wrath), "
+                                  "Carmilla (Sắc dục / Dục vọng = Lust), Daphne (Bạo thực / Phàm ăn = Gluttony), "
+                                  "Typhon (Kiêu ngạo / Ngạo mạn = Pride) [1][2].")
 
 
 def test_refused_question_is_logged_without_llm_or_message(make_user, client_for, fake_answer):

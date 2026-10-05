@@ -31,7 +31,51 @@ NOT_FOUND = "Not found in the provided passages."
 SEARCH_K = 5
 PAGE_CHUNKS = 5
 
+# Vietnamese fan terms and the English the novel text uses: translated word by word they mislead
+# searches (e.g. "gia hộ" is not a household). Names are written the same in both languages.
+# Only terms, never facts: an entry must not answer a question by itself (so no "Return by Death").
+GLOSSARY = {
+    "gia hộ": "divine protection / blessing",
+    "quyền năng": "Authority (of an Archbishop or Witch)",
+    "Bạch Kình": "White Whale",
+    "Đại Thỏ": "Great Rabbit",
+    "Hắc Xà": "Black Serpent",
+    "ma thú": "demon beast",
+    "Thánh Địa": "Sanctuary",
+    "kết giới": "barrier",
+    "Thử thách": "Trial",
+    "Kiếm Thánh": "Sword Saint",
+    "Kiếm Quỷ": "Sword Devil",
+    "Hiền Giả": "Sage",
+    "Tháp canh Pleiades": "Pleiades Watchtower",
+    "Tuyển chọn Vương vị / Tuyển cử Vương vị": "royal selection",
+    "ứng cử viên": "royal candidate",
+    "Giáo phái Phù thủy / Ma Nữ Giáo": "Witch Cult",
+    "Phù thủy / Ma Nữ": "Witch",
+    "Tổng Giám mục (Tội lỗi) / Đại Tư Giáo": "Archbishop (of the Seven Deadly Sins)",
+    "Lười biếng": "Sloth",
+    "Tham lam / Tham vọng": "Greed",
+    "Phẫn nộ": "Wrath",
+    "Sắc dục / Dục vọng": "Lust",
+    "Bạo thực / Phàm ăn": "Gluttony",
+    "Kiêu ngạo / Ngạo mạn": "Pride",
+    "Đố kỵ / Ghen tị": "Envy",
+    "tinh linh / Đại tinh linh": "spirit / Great Spirit",
+    "khế ước": "contract",
+    "Vô Hình Thủ / bàn tay vô hình": "Unseen Hand",
+    "á nhân": "demi-human",
+    "bán tinh linh": "half-elf",
+    "quỷ tộc / tộc quỷ": "oni / demon race",
+    "dinh thự Roswaal": "Roswaal Manor",
+    "Đế quốc Volakia / Vollachia": "Volakian Empire",
+    "Tập / Chương": "Volume / Chapter",
+}
+GLOSSARY_TEXT = "; ".join(f"{vi} = {en}" for vi, en in GLOSSARY.items())
+
 SYSTEM_PROMPT = f"""You answer questions about the light novel series "Re:ZERO -Starting Life in Another World-" (main Volumes 1–28 and Short Story Collections 1–4), using ONLY passages you retrieve with your tools. The novel text is in English.
+
+Vietnamese terms readers use, with the English the novel uses (search with the English):
+{GLOSSARY_TEXT}
 
 Where things are (for navigating only, not as facts for your answer): Arc 1 = Volume 1 (royal capital, loot house); Arc 2 = Volumes 2–3 (Roswaal Manor); Arc 3 = Volumes 4–9 (royal selection, White Whale, Petelgeuse/Sloth); Arc 4 = Volumes 10–15 (the Sanctuary, Echidna's trials); Arc 5 = Volumes 16–20 (Pristella, the water city); Arc 6 = Volumes 21–25 (Pleiades Watchtower); Arc 7 = Volumes 26–28 (Volakian Empire).
 
