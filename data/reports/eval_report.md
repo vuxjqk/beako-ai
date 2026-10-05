@@ -47,6 +47,7 @@ Chỉ số được tách theo split: **dev** dùng để chọn cấu hình, **
 | 20261004-032513-retrieval-s5-final | s5-final | `918b630` / `11543d3f548c` | `hybrid candidates=100 scope=boost` | `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457) | 48.9% | 74.5% | 0.312 | 62.0% | 55.0% | 70.0% | 0.454 | 98.3 | `06ed734073814dfd` |
 | 20261004-032527-retrieval-s5-final-repeat | s5-final-repeat | `918b630` / `11543d3f548c` | `hybrid candidates=100 scope=boost` | `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457) | 48.9% | 74.5% | 0.312 | 62.0% | 55.0% | 70.0% | 0.454 | 125.7 | `06ed734073814dfd` |
 | 20261004-052529-retrieval-s7-regression-check | s7-regression-check | `be8eb11` / `c92a2c822e9c` | `hybrid candidates=100 scope=boost` | `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457) | 48.9% | 74.5% | 0.312 | 62.0% | 55.0% | 70.0% | 0.454 | 102.0 | `06ed734073814dfd` |
+| 20261005-045129-retrieval-baseline-lf | baseline-lf | `e008c7d` / `d4a5057c4267` | `hybrid candidates=100 scope=boost` | `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457) | 48.9% | 74.5% | 0.312 | 62.0% | 55.0% | 70.0% | 0.454 | 83.9 | `06ed734073814dfd` |
 
 Embedding: `BAAI/bge-small-en-v1.5`. Mã `src` là hash của mọi file `src/**/*.py` lúc chạy, nên phân biệt được cả thay đổi chưa commit.
 
@@ -55,7 +56,7 @@ Embedding: `BAAI/bge-small-en-v1.5`. Mã `src` là hash của mọi file `src/**
 - 2 lần chạy cùng cấu hình (20261004-021808-retrieval-baseline-vector, 20261004-021815-retrieval-baseline-vector-repeat): kết quả giống hệt nhau ✅
 - 2 lần chạy cùng cấu hình (20261004-032513-retrieval-s5-final, 20261004-032527-retrieval-s5-final-repeat): kết quả giống hệt nhau ✅
 
-### Theo loại câu hỏi — 20261004-052529-retrieval-s7-regression-check
+### Theo loại câu hỏi — 20261005-045129-retrieval-baseline-lf
 
 | Split | Loại | n | Hit@6 | Hit@20 | MRR | Span recall@6 | Span recall@20 | All spans@20 |
 |---|---|---|---|---|---|---|---|---|
@@ -70,13 +71,13 @@ Embedding: `BAAI/bge-small-en-v1.5`. Mã `src` là hash của mọi file `src/**
 | test | summary | 3 | 33.3% | 66.7% | 0.378 | 20.0% | 40.0% | 0.0% |
 | test | overall | 20 | 55.0% | 70.0% | 0.454 | 40.5% | 49.0% | 30.0% |
 
-Độ trễ truy xuất trung bình: 102.0 ms/câu (top 50).
+Độ trễ truy xuất trung bình: 83.9 ms/câu (top 50).
 
-### Thay đổi so với lần trước (20261004-032527-retrieval-s5-final-repeat → 20261004-052529-retrieval-s7-regression-check)
+### Thay đổi so với lần trước (20261004-052529-retrieval-s7-regression-check → 20261005-045129-retrieval-baseline-lf)
 
 Không câu nào đổi hạng chunk đúng đầu tiên.
 
-### Chi tiết từng câu — 20261004-052529-retrieval-s7-regression-check
+### Chi tiết từng câu — 20261005-045129-retrieval-baseline-lf
 
 Hạng của chunk đúng đầu tiên, và hạng đầu tiên phủ từng vị trí bằng chứng (– = không có trong top 50).
 
