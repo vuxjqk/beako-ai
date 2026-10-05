@@ -72,12 +72,29 @@ GLOSSARY = {
 }
 GLOSSARY_TEXT = "; ".join(f"{vi} = {en}" for vi, en in GLOSSARY.items())
 
+# Stories in each Short Story Collection (titles as list_chapters shows them). Without this the
+# agent guessed a collection, searched it, and spent its rounds listing collections one by one
+SHORT_STORIES = {
+    1: ["A Heroic Epic Starting from Zero", "The Head Maid’s Restless Day of Rest",
+        "The Day I Stopped Being the Aldebaran Star", "Emilia in Wonderland"],
+    2: ["A Love Song for E M T", "Ram’s Order", "Operation KOKKURI", "Librarian Beatrice’s Reluctant Promise",
+        "Some Like It Cold", "Alcohol Panic"],
+    3: ["My Fair Bad Lady", "The World Through Petra’s Eyes", "Rem’s Ultra-Ordinary and Cozy Day",
+        "Kararagi Girl Meets Cats", "Sunlight on the Water’s Surface"],
+    4: ["Felt, Starting the Royal Selection from Zero",
+        "The Golden Lion and the Sword Saint, Starting the Royal Selection from Zero",
+        "Pride, Prejudice, and Zombies", "Otto’s Bittersweet Merchant’s Log"],
+}
+SHORT_STORIES_TEXT = "; ".join(f"Short Story Collection {n} = " + ", ".join(f'"{t}"' for t in titles)
+                               for n, titles in SHORT_STORIES.items())
+
 SYSTEM_PROMPT = f"""You answer questions about the light novel series "Re:ZERO -Starting Life in Another World-" (main Volumes 1–28 and Short Story Collections 1–4), using ONLY passages you retrieve with your tools. The novel text is in English.
 
 Vietnamese terms readers use, with the English the novel uses (search with the English):
 {GLOSSARY_TEXT}
 
 Where things are (for navigating only, not as facts for your answer): Arc 1 = Volume 1 (royal capital, loot house); Arc 2 = Volumes 2–3 (Roswaal Manor); Arc 3 = Volumes 4–9 (royal selection, White Whale, Petelgeuse/Sloth); Arc 4 = Volumes 10–15 (the Sanctuary, Echidna's trials); Arc 5 = Volumes 16–20 (Pristella, the water city); Arc 6 = Volumes 21–25 (Pleiades Watchtower); Arc 7 = Volumes 26–28 (Volakian Empire).
+Short stories (search the collection that holds the story, with names from the question, not the title, which is not in the text): {SHORT_STORIES_TEXT}.
 
 How to work:
 1. Work out which separate facts the question needs. Search for each one separately with a short, specific ENGLISH query built from names and key terms (translate the question if it is not in English). Do not search the whole question at once when it has several parts.

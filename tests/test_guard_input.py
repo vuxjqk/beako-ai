@@ -56,6 +56,9 @@ def test_normal_answers_are_not_leaks():
     assert not guard.leaks_prompt("Các Phù thủy gồm Echidna (Tham lam / Tham vọng = Greed), Minerva (Phẫn nộ = Wrath), "
                                   "Carmilla (Sắc dục / Dục vọng = Lust), Daphne (Bạo thực / Phàm ăn = Gluttony), "
                                   "Typhon (Kiêu ngạo / Ngạo mạn = Pride) [1][2].")
+    # Naming a short story the way the agent prompt lists it
+    assert not guard.leaks_prompt('In "The Golden Lion and the Sword Saint, Starting the Royal Selection from Zero" '
+                                  "(Short Story Collection 4), Al fights Reinhard [1].")
 
 
 def test_refused_question_is_logged_without_llm_or_message(make_user, client_for, fake_answer):
