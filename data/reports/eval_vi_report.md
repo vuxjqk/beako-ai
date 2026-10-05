@@ -2,7 +2,9 @@
 
 Câu hỏi: hệ thống QA (agent mode, mặc định) trả lời câu hỏi tiếng Việt kém hơn câu hỏi tiếng Anh bao nhiêu, và kém ở câu nào?
 
-**Kết luận ngắn:** điểm câu có đáp án giảm từ **82,8% xuống 79,9%** (−3,0 điểm), câu ngoài phạm vi vẫn xử lý đúng **15/15**. So từng cặp, 17/82 câu đổi kết quả (10 câu tệ đi, 7 câu tốt lên). Mức dao động này gần bằng mức dao động giữa hai lần chạy tiếng Anh (14 câu đổi), nên phần lớn chênh lệch là nhiễu. Có **một lỗi chắc chắn do ngôn ngữ**: agent dịch "gia hộ" thành *household/butler* (fact-11). Ngoài ra có hai tín hiệu nhỏ nhưng cùng chiều: bằng chứng chuẩn lọt vào ngữ cảnh ít hơn 4 câu (68,7% → 62,7%), và câu multi-hop giảm nhiều nhất.
+**Cập nhật sau bước 2 (bảng thuật ngữ):** lỗi dịch duy nhất đã hết, tỉ lệ truy xuất trở về ngang tiếng Anh, và chênh lệch còn lại nằm trong vùng nhiễu. Hai lần chạy giống hệt nhau đã khác kết quả ở 11/45 câu dev. Xem mục "Bước 2".
+
+**Kết luận ngắn (lần chạy đầu):** điểm câu có đáp án giảm từ **82,8% xuống 79,9%** (−3,0 điểm), câu ngoài phạm vi vẫn xử lý đúng **15/15**. So từng cặp, 17/82 câu đổi kết quả (10 câu tệ đi, 7 câu tốt lên). Mức dao động này gần bằng mức dao động giữa hai lần chạy tiếng Anh (14 câu đổi), nên phần lớn chênh lệch là nhiễu. Có **một lỗi chắc chắn do ngôn ngữ**: agent dịch "gia hộ" thành *household/butler* (fact-11). Ngoài ra có hai tín hiệu nhỏ nhưng cùng chiều: bằng chứng chuẩn lọt vào ngữ cảnh ít hơn 4 câu (68,7% → 62,7%), và câu multi-hop giảm nhiều nhất.
 
 ## Cách làm
 
@@ -93,15 +95,55 @@ Agent dịch truy vấn sang tiếng Anh ở 167/170 lần tìm kiếm. Ba lần
 - Câu trả lời tiếng Việt dài hơn (trung bình 182 token ra so với 143). Token vào và số lần gọi LLM gần như không đổi.
 - Hash bộ câu hỏi của lần chạy EN mới (`9ea32464c642`) khác với các lần chạy cũ (`abd3887b94c3`) dù nội dung giống hệt. Lý do là trên Windows, Git checkout file với xuống dòng CRLF. Hệ quả: `regress` không ghép được các lần chạy cũ với lần chạy mới.
 
+## Bước 2: bảng thuật ngữ Việt → Anh trong prompt agent
+
+Prompt agent (`src/services/agent.py`, `GLOSSARY`) có thêm 34 cặp thuật ngữ: gia hộ = divine protection/blessing, Bạch Kình = White Whale, Thánh Địa = Sanctuary, Kiếm Thánh = Sword Saint, Tổng Giám mục = Archbishop, tên bảy tội, v.v.
+
+Bảng chỉ chứa thuật ngữ, không chứa sự kiện. Mục "Tử Vong Hồi Quy = Return by Death" bị bỏ vì nó chính là đáp án của fact-02. Bảng cũng được loại khỏi bộ phát hiện lộ prompt (`guard.leaks_prompt`), để câu trả lời liệt kê các tội kèm tên tiếng Anh không bị chặn nhầm (có test riêng).
+
+Các lần chạy, cùng code và cùng prompt:
+
+- G1 `20261005-023444-generation-lang-vi-glossary-dev`: chạy trên dev để tinh chỉnh. Khi `--resume`, do lỗi harness, run này **chạy luôn cả test** (`--resume` bỏ qua `--only`; lỗi đã được sửa). Phần test của G1 không được dùng khi quyết định.
+- G2 `20261005-030534-generation-lang-vi-glossary`: lần chạy thứ hai để tách nhiễu và xác nhận trên test. Run này dừng ở 64/82 câu vì hết quota ngày của gói miễn phí (500 lượt). Còn thiếu sum-07, sum-08, sum-09 và 15 câu ngoài phạm vi; chạy tiếp được bằng `--resume`.
+
+Các số dưới đây chỉ tính 64 câu có đáp án mà cả bốn lần chạy đều có kết quả (45 dev, 19 test):
+
+| | EN | VI | VI + bảng (G1) | VI + bảng (G2) |
+|---|---|---|---|---|
+| Điểm dev (45) | 82,2% | 81,1% | 86,7% | 84,4% |
+| Điểm test (19) | 86,8% | 78,9% | (78,9%)\* | 81,6% |
+| Bằng chứng chuẩn trong ngữ cảnh | 43/64 | 40/64 | 43/64 | 43/64 |
+| Từ chối nhầm / sai | 4 / 3 | 5 / 2 | 2 / 3 | 2 / 3 |
+| Truy vấn tìm kiếm còn tiếng Việt | – | 3/170 | 1/179 | 0/140 |
+
+\* Phần test của G1 là ngoài ý muốn, ghi lại để đủ dữ liệu.
+
+**Nhiễu lớn hơn chênh lệch cần đo.** G1 và G2 cùng code, cùng prompt, nhưng khác kết quả ở **11/45 câu dev**. Với mức dao động này, một lần chạy đơn lẻ không phân biệt được chênh lệch 3–5 điểm. Vì vậy kết luận dưới đây dựa trên các câu cho **cùng kết quả ở cả hai lần chạy**:
+
+- **Câu đúng ở EN nhưng rớt ở cả G1 lẫn G2:** chỉ có 3 câu, đều là partial vì thiếu một ý: fact-06 (dev, thiếu "ví tiền"), fact-19 (test, thiếu "bất tỉnh khi chạm kết giới") và sum-06 (test, thiếu mục đích và tuyến đường). Trace cho thấy query của cả ba đều là tiếng Anh đúng ý. Fact-19 và sum-06 cũng đã partial ở lần chạy VI đầu tiên, nên đây là hai ứng viên đáng xem nếu muốn tìm lỗi riêng của tiếng Việt.
+- **Câu sai ở EN nhưng đúng ở cả G1 lẫn G2:** cũng 3 câu (fact-01, fact-16, fact-20). Tính theo cách đếm này, sau khi có bảng thuật ngữ thì chênh lệch do ngôn ngữ xấp xỉ 0.
+- **fact-11**, lỗi dịch duy nhất ở lần chạy đầu, đã hết: cả hai lần đều tìm `Crusch Karsten divine protection`. G2 trả lời đúng (wind reading); G1 từ chối vì không tìm ra đoạn cần, tức là không còn trả lời sai.
+- Trong 10 câu rớt ở lần chạy VI đầu tiên, 7 câu đúng ở ít nhất một lần chạy có bảng thuật ngữ.
+- Tỉ lệ bằng chứng lọt vào ngữ cảnh trở về đúng mức của EN (43/64 ở cả hai lần, so với 40/64 khi chưa có bảng). Agent không còn tìm kiếm bằng tiếng Việt.
+- Câu ngoài phạm vi: G1 xử lý đúng 15/15 với prompt mới. G2 chưa chạy tới phần này.
+
+**Kết luận:** bảng thuật ngữ sửa được lỗi dịch duy nhất đã thấy và đưa khả năng truy xuất của câu hỏi tiếng Việt về ngang tiếng Anh. Trên test, điểm vẫn thấp hơn EN khoảng 5 điểm, nhưng mức này nằm trong vùng nhiễu: chỉ 2 câu test (fact-19, sum-06) rớt ổn định.
+
+**Chưa kiểm:** prompt mới chưa được chạy lại với bộ câu tiếng Anh. Bảng thuật ngữ không nên ảnh hưởng câu tiếng Anh, nhưng prompt đã đổi, nên cần một lần chạy EN (khoảng 330 lượt) để chắc chắn không có hồi quy.
+
 ## Đề xuất
 
-1. **Thêm bảng thuật ngữ Việt → Anh vào prompt agent**, gồm: gia hộ = divine protection/blessing, Bạch Kình = White Whale, Thánh Địa = Sanctuary, Kiếm Thánh = Sword Saint, Tổng Giám mục = Archbishop, và tên các tội. Cách này sửa trực tiếp lỗi ở fact-11. Chỉ tinh chỉnh trên dev, sau đó chạy lại cả hai bộ để xác nhận trên test.
-2. **Chạy lại bản VI thêm một lần** (khoảng 330 lượt gọi LLM). Mục đích là tách nhiễu khỏi tác động thật của ngôn ngữ: câu nào rớt ở cả hai lần chạy VI mà đúng ở EN mới là câu rớt thật do ngôn ngữ.
-3. **Trả câu từ chối theo ngôn ngữ của câu hỏi** ở phía API: vẫn nhận diện bằng chuỗi `NOT_FOUND`, nhưng hiển thị cho người dùng bản tiếng Việt.
-4. Thêm vào prompt giám khảo yêu cầu viết phần `explanation` bằng tiếng Anh, để report đồng nhất.
-5. Thêm `*.json text eol=lf` vào `.gitattributes` để hash của bộ câu hỏi không phụ thuộc hệ điều hành. Sau đó cần chạy lại baseline.
+1. ~~Thêm bảng thuật ngữ vào prompt agent.~~ Đã làm, xem phần trên.
+2. Khi quota hồi:
+   - Chạy tiếp G2 bằng `--resume` để đủ 82 câu, khoảng 70 lượt.
+   - Chạy bộ tiếng Anh với prompt mới để kiểm hồi quy.
+3. **Mỗi so sánh nên chạy ít nhất 2 lần.** Mức dao động 11/45 câu giữa hai lần chạy giống hệt nhau lớn hơn hầu hết các thay đổi đang muốn đo. Cũng có thể hạ `LLM_TEMPERATURE` (đang là 0,2) khi chạy eval.
+4. **Trả câu từ chối theo ngôn ngữ của câu hỏi** ở phía API: vẫn nhận diện bằng chuỗi `NOT_FOUND`, nhưng hiển thị cho người dùng bản tiếng Việt.
+5. Thêm vào prompt giám khảo yêu cầu viết phần `explanation` bằng tiếng Anh, để report đồng nhất.
+6. Thêm `*.json text eol=lf` vào `.gitattributes` để hash của bộ câu hỏi không phụ thuộc hệ điều hành. Sau đó cần chạy lại baseline.
 
 ## Thay đổi trong code
 
-- `python -m src.eval retrieval|generation --golden FILE`: chạy trên file câu hỏi khác có cùng id. Đường dẫn file được ghi vào `golden_set.path` của mỗi lần chạy, và `--resume` tự dùng lại file mà lần chạy đó đã bắt đầu.
+- `python -m src.eval retrieval|generation --golden FILE`: chạy trên file câu hỏi khác có cùng id. Đường dẫn file được ghi vào `golden_set.path` của mỗi lần chạy, và `--resume` tự dùng lại file mà lần chạy đó đã bắt đầu. Danh sách `--only` được lưu trong header và cũng được `--resume` dùng lại.
+- `src/services/agent.py`: thêm `GLOSSARY` vào prompt agent. `src/services/guard.py` loại bảng này khỏi bộ phát hiện lộ prompt.
 - `eval_report.md`: các lần chạy trên file câu hỏi khác được liệt kê ở mục riêng "Bộ câu hỏi khác", để không lẫn với các bảng so sánh trên `golden_set.json`.

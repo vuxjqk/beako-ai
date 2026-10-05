@@ -296,3 +296,5 @@ Các lần chạy trên một file câu hỏi khác cùng id (vd. bản tiếng 
 | Lần chạy | Loại | File câu hỏi | Nhãn | Chế độ | dev Hit@6 / Điểm | Đúng | Từ chối nhầm | Ngoài phạm vi xử lý đúng |
 |---|---|---|---|---|---|---|---|---|
 | 20261005-012550-generation-lang-vi | generation | `data/eval/golden_set_vi.json` | lang-vi | agent | 79.8% | 70.2% | 7.5% | 100.0% |
+| 20261005-023444-generation-lang-vi-glossary-dev | generation | `data/eval/golden_set_vi.json` | lang-vi-glossary-dev | agent | 84.3% | 76.1% | 3.0% | 100.0% |
+| 20261005-030534-generation-lang-vi-glossary | generation | `data/eval/golden_set_vi.json` | lang-vi-glossary | agent | 83.6% | 75.0% | 3.1% | – |
