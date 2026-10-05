@@ -11,6 +11,7 @@ endpoint uses and find where the evidence shows up:
 import hashlib
 import json
 import time
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -85,15 +86,15 @@ def fingerprint(results: list[dict]) -> str:
 
 
 def run(db: Session, label: str | None, cfg: RetrievalConfig, depth: int = DEPTH,
-        only: set[str] | None = None) -> dict:
-    questions, sha = golden.load()
+        only: set[str] | None = None, golden_path: Path = golden.GOLDEN_PATH) -> dict:
+    questions, sha = golden.load(golden_path)
     targets = [q for q in questions if q.in_scope and (not only or q.id in only)]
     get_embedder()  # load the models before timing anything
     if targets:
         evaluate_question(db, targets[0], depth, cfg)
         db.rollback()
     run_dir = runs.new_run_dir("retrieval", label)
-    record = runs.header("retrieval", label, sha, len(targets))
+    record = runs.header("retrieval", label, sha, len(targets), golden_path)
     record["config"] = runs.retrieval_config(db, depth, cfg)
     results = []
     for q in targets:

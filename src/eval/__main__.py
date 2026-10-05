@@ -6,6 +6,8 @@
                                 --set key=value overrides a RetrievalConfig field, e.g.
                                 --set method=hybrid scope=true
     generation [--label L]      full QA + LLM judge (uses quota; --resume DIR continues a stopped run)
+                                retrieval and generation take --golden FILE for another question file
+                                with the same ids, e.g. data/eval/golden_set_vi.json (questions in Vietnamese)
     combine --simple D --agent D --policy P
                                 simulate an auto-mode routing policy from a simple run and an
                                 agent run (no LLM calls); saved as a run marked "simulated"
@@ -63,6 +65,7 @@ def main() -> None:
     p.add_argument("--depth", type=int, default=retrieval.DEPTH)
     p.add_argument("--only", nargs="*", help="question ids (default: all)")
     p.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="retrieval setting overrides")
+    p.add_argument("--golden", type=Path, default=golden.GOLDEN_PATH, help="question file")
     p = sub.add_parser("generation")
     p.add_argument("--label")
     p.add_argument("--judge-model", help="default: LLM_MODEL")
@@ -74,6 +77,8 @@ def main() -> None:
                         "than an API request; free tier asks for up to ~60 s)")
     p.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="retrieval setting overrides")
     p.add_argument("--only", nargs="*", help="question ids (default: all)")
+    p.add_argument("--golden", type=Path, default=golden.GOLDEN_PATH,
+                   help="question file (a --resume run keeps the one it started with)")
     p = sub.add_parser("combine")
     p.add_argument("--simple", required=True, help="run directory name of a --mode simple run")
     p.add_argument("--agent", required=True, help="run directory name of a --mode agent run")
@@ -131,7 +136,7 @@ def main() -> None:
             return
         if args.cmd == "retrieval":
             cfg = default_config().with_overrides(args.set)
-            r = retrieval.run(db, args.label, cfg, args.depth, set(args.only or []))
+            r = retrieval.run(db, args.label, cfg, args.depth, set(args.only or []), args.golden)
             # Only dev is printed: decisions are made on dev, test is read in the report at the end
             s = r["summary"]["dev"]["overall"]
             print(f"[{cfg.label()}] dev n={s['n']} hit@6={s['hit@6']:.3f} hit@20={s['hit@20']:.3f} "
@@ -141,7 +146,7 @@ def main() -> None:
             cfg = default_config().with_overrides(args.set)
             config.LLM_MAX_RETRY_WAIT_SECONDS = args.max_retry_wait
             r = generation.run(db, args.label, args.judge_model, args.pause, cfg,
-                               args.mode or config.QA_MODE, args.resume, set(args.only or []))
+                               args.mode or config.QA_MODE, args.resume, set(args.only or []), args.golden)
             i, o = r["summary"]["in_scope"], r["summary"]["out_of_scope"]
             print(f"score={i['score']} correct={i['correct']} false_refusal={i['false_refusal']} "
                   f"oos_handled={o['handled']} errors={r['summary']['errors']}")

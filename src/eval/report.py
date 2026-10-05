@@ -24,6 +24,32 @@ def _short(s: str, n: int = 90) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
+def _question_file(run: dict) -> str:
+    return run["golden_set"].get("path", golden.GOLDEN_PATH.as_posix())
+
+
+def _other_files_section(other: list[dict]) -> list[str]:
+    """Runs on another question file (same ids, e.g. the Vietnamese copy): listed apart, so the
+    sections above compare like with like."""
+    out = ["## Bộ câu hỏi khác", "",
+           "Các lần chạy trên một file câu hỏi khác cùng id (vd. bản tiếng Việt). So sánh từng câu với một lần "
+           "chạy trên `golden_set.json` cùng mã và cấu hình, không so với bảng ở trên.", "",
+           "| Lần chạy | Loại | File câu hỏi | Nhãn | Chế độ | dev Hit@6 / Điểm | Đúng | Từ chối nhầm "
+           "| Ngoài phạm vi xử lý đúng |",
+           "|---|---|---|---|---|---|---|---|---|"]
+    for r in other:
+        s = r["summary"]
+        if r["kind"] == "retrieval":
+            out.append(f"| {r['dir']} | retrieval | `{_question_file(r)}` | {r.get('label') or ''} | "
+                       f"| {_pct(s['dev']['overall']['hit@6'])} | | | |")
+        else:
+            i = s["in_scope"]
+            out.append(f"| {r['dir']} | generation | `{_question_file(r)}` | {r.get('label') or ''} "
+                       f"| {r['config']['generation'].get('qa_mode', 'simple')} | {_pct(i['score'])} "
+                       f"| {_pct(i['correct'])} | {_pct(i['false_refusal'])} | {_pct(s['out_of_scope']['handled'])} |")
+    return out + [""]
+
+
 def _retrieval_key(run: dict) -> tuple:
     c = run["config"]
     return (run["code"]["src_sha256"], c["method"], c["embedding_model"], c["depth"], _chunkers(c),
@@ -205,6 +231,10 @@ def build() -> Path:
         r["summary"] = retrieval.aggregate(r["results"])
     for r in gruns:
         r["summary"] = generation.aggregate(r["results"])
+    main = golden.GOLDEN_PATH.as_posix()
+    other = [r for r in rruns + gruns if _question_file(r) != main]
+    rruns = [r for r in rruns if _question_file(r) == main]
+    gruns = [r for r in gruns if _question_file(r) == main]
     counts: dict[str, int] = {}
     for q in questions.values():
         counts[q.category] = counts.get(q.category, 0) + 1
@@ -229,6 +259,8 @@ def build() -> Path:
               "- Đổi bộ câu hỏi làm đổi `golden_set.sha256`; chỉ so sánh các lần chạy cùng hash.", ""]
     lines += _retrieval_section(rruns, questions) if rruns else ["## Truy xuất", "", "Chưa có lần chạy.", ""]
     lines += _generation_section(gruns, questions) if gruns else ["## Sinh câu trả lời", "", "Chưa có lần chạy.", ""]
+    if other:
+        lines += _other_files_section(other)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
     return REPORT_PATH

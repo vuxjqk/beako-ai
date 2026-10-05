@@ -86,13 +86,17 @@ def new_run_dir(kind: str, label: str | None) -> Path:
     return path
 
 
-def header(kind: str, label: str | None, golden_sha: str, n_questions: int) -> dict:
+def header(kind: str, label: str | None, golden_sha: str, n_questions: int,
+           golden_path: Path | None = None) -> dict:
+    golden_set = {"sha256": golden_sha[:12], "questions": n_questions}
+    if golden_path is not None:
+        golden_set["path"] = golden_path.as_posix()
     return {
         "kind": kind,
         "label": label,
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "code": _code(),
-        "golden_set": {"sha256": golden_sha[:12], "questions": n_questions},
+        "golden_set": golden_set,
     }
 
 

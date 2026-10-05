@@ -231,21 +231,25 @@ def aggregate(results: list[dict]) -> dict:
 
 
 def run(db: Session, label: str | None, judge_model: str | None, pause: float, cfg: RetrievalConfig,
-        mode: str, resume: Path | None = None, only: set[str] | None = None) -> dict:
+        mode: str, resume: Path | None = None, only: set[str] | None = None,
+        golden_path: Path = golden.GOLDEN_PATH) -> dict:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
-    questions, sha = golden.load()
+    if resume:  # a resumed run keeps its question file
+        header = json.loads((resume / "header.json").read_text(encoding="utf-8"))
+        golden_path = Path(header["golden_set"].get("path", golden.GOLDEN_PATH))
+    questions, sha = golden.load(golden_path)
     targets = [q for q in questions if not only or q.id in only]
     judge_model = judge_model or config.LLM_MODEL
     get_embedder()
     if resume:
         run_dir = resume
-        record = json.loads((run_dir / "header.json").read_text(encoding="utf-8"))
+        record = header
         if record["golden_set"]["sha256"] != sha[:12]:
             raise SystemExit("golden set changed since this run started; start a new run")
     else:
         run_dir = runs.new_run_dir("generation", label)
-        record = runs.header("generation", label, sha, len(targets))
+        record = runs.header("generation", label, sha, len(targets), golden_path)
         record["config"] = {"retrieval": runs.retrieval_config(db, config.QA_TOP_K, cfg),
                             "generation": runs.generation_config(judge_model, mode)}
         (run_dir / "header.json").write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
