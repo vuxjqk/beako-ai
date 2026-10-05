@@ -142,6 +142,17 @@ Model đôi khi gửi `query` của tool `search` dưới dạng list các cách
 
 Đã sửa: tool `search` ghép list thành một chuỗi (có test `tests/test_agent_tools.py`). Các run trong báo cáo này đều chạy **trước** khi có bản sửa, nên nếu có ảnh hưởng thì là theo hướng tốt lên, và chưa được đo.
 
+### Đọc trace fact-10 và rel-10 (hai câu bị từ chối dù truy xuất xếp chunk đúng ở hạng 1–2)
+
+Đã chạy lại đúng các truy vấn agent dùng qua retrieval (kết quả tất định) để xem chunk đúng đứng hạng mấy.
+
+- **rel-10: lỗi điều hướng phạm vi**, không phải truy vấn lệch hay đọc sót. Truyện nằm ở Short Story Collection 4. Ở cả 6 run agent, agent đều giới hạn tìm kiếm trong collection 1, 2 hoặc 3, rồi gọi `list_chapters` từng collection một, mỗi lần mất trọn một vòng, và hết 5 vòng trước khi tới collection 4. Truy vấn của agent tốt: chạy không giới hạn, hoặc giới hạn đúng collection 4, thì chunk đúng nằm ở hạng 1–3. Chunk đúng chưa bao giờ được đưa cho agent đọc.
+- **fact-10** (từ chối ở run ENg, đúng ở 6 run còn lại): hai truy vấn đầu gửi dạng list nên không trả về gì. Nếu gửi dạng chuỗi, chính truy vấn đó đưa chunk đúng lên hạng 1. Sau đó agent đọc trang 1 của chương Interlude: Rem, còn chunk đúng ở trang 2, và hết vòng. Nguyên nhân là lỗi query dạng list, đã sửa ở `71ab487`.
+
+**Sửa:** prompt agent có thêm danh mục truyện của từng Short Story Collection (`SHORT_STORIES`, khớp với database), kèm lưu ý tìm bằng tên nhân vật chứ không bằng tên truyện, vì tên truyện không nằm trong nội dung chunk. Danh mục này được loại khỏi bộ phát hiện lộ prompt.
+
+**Kiểm chứng:** chạy rel-10 và fact-10 hai lần với tiếng Anh và hai lần với tiếng Việt (`nav-en-1/2`, `nav-vi-1/2`): 8/8 đúng. rel-10 lần nào cũng tìm ở collection 4 ngay vòng đầu (1 vòng thay vì 5), chunk đúng có trong ngữ cảnh. fact-10 gửi query dạng chuỗi, chunk đúng đứng hạng 1. Bộ đầy đủ 82 câu chưa được chạy lại với prompt này.
+
 ### Kết luận
 
 Với bảng thuật ngữ, câu hỏi tiếng Việt đạt ngang câu hỏi tiếng Anh: trung bình hai lần chạy là 84,0% (VI) so với 82,0% (EN). Chênh lệch ổn định chỉ còn 1 câu mỗi bên, và tỉ lệ truy xuất bằng chứng bằng nhau (45–46/67). Bộ câu tiếng Anh không bị hồi quy.
