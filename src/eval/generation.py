@@ -235,9 +235,10 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
         golden_path: Path = golden.GOLDEN_PATH) -> dict:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
-    if resume:  # a resumed run keeps its question file
+    if resume:  # a resumed run keeps its question file and its --only selection
         header = json.loads((resume / "header.json").read_text(encoding="utf-8"))
         golden_path = Path(header["golden_set"].get("path", golden.GOLDEN_PATH))
+        only = set(header.get("only") or []) or only
     questions, sha = golden.load(golden_path)
     targets = [q for q in questions if not only or q.id in only]
     judge_model = judge_model or config.LLM_MODEL
@@ -250,6 +251,8 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
     else:
         run_dir = runs.new_run_dir("generation", label)
         record = runs.header("generation", label, sha, len(targets), golden_path)
+        if only:
+            record["only"] = sorted(only)
         record["config"] = {"retrieval": runs.retrieval_config(db, config.QA_TOP_K, cfg),
                             "generation": runs.generation_config(judge_model, mode)}
         (run_dir / "header.json").write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
