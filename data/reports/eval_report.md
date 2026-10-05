@@ -169,6 +169,8 @@ Lần chạy *mô phỏng* (`python -m src.eval combine`) ghép kết quả từ
 | 20261005-033513-generation-lang-en-glossary | lang-en-glossary | agent | `hybrid candidates=100 scope=boost` | `gemini-3.5-flash-lite` | `47b906aee31d` | `gemini-3.5-flash-lite` | ✅ | 81.3% | 73.1% | 16.4% | 4.5% | 6.0% | 67.2% | 92.1% | 68.2% | 100.0% | 3.2 | 10901.2/141 | 7221.9 |
 | 20261005-050459-generation-nav-en-1 | nav-en-1 | agent | `hybrid candidates=100 scope=boost` | `gemini-3.5-flash-lite` | `47b906aee31d` | `gemini-3.5-flash-lite` | ✅ | 100.0% | 100.0% | 0.0% | 0.0% | 0.0% | 100.0% | 100.0% | 100.0% | – | 2 | 5264.5/100 | 3581 |
 | 20261005-050617-generation-nav-en-2 | nav-en-2 | agent | `hybrid candidates=100 scope=boost` | `gemini-3.5-flash-lite` | `47b906aee31d` | `gemini-3.5-flash-lite` | ✅ | 100.0% | 100.0% | 0.0% | 0.0% | 0.0% | 100.0% | 100.0% | 100.0% | – | 4 | 17687.5/175.5 | 6327.5 |
+| 20261005-092219-generation-luna-en-1 | luna-en-1 | agent | `hybrid candidates=100 scope=boost` | `gpt-6-luna` | `47b906aee31d` | `gemini-3.1-flash-lite` | ✅ | 75.4% | 61.2% | 28.4% | 7.5% | 3.0% | 73.1% | 69.2% | 61.5% | 86.7% | 3.6 | 19170.7/195.4 | 8235.9 |
+| 20261005-094842-generation-luna-en-2 | luna-en-2 | agent | `hybrid candidates=100 scope=boost` | `gpt-6-luna` | `47b906aee31d` | `gemini-3.1-flash-lite` | ✅ | 78.4% | 64.2% | 28.4% | 6.0% | 1.5% | 77.6% | 71.2% | 65.1% | 93.3% | 3.8 | 18596.8/195.1 | 8154.6 |
 
 ### Điểm theo loại câu và split, từng lần chạy
 
@@ -184,35 +186,119 @@ Lần chạy *mô phỏng* (`python -m src.eval combine`) ghép kết quả từ
 | 20261005-033513-generation-lang-en-glossary | agent | 81.4% | 82.1% | 88.9% | 72.2% | 81.9% | 80.0% | 100.0% |
 | 20261005-050459-generation-nav-en-1 | agent | 100.0% | 100.0% | – | – | 100.0% | 100.0% | – |
 | 20261005-050617-generation-nav-en-2 | agent | 100.0% | 100.0% | – | – | 100.0% | 100.0% | – |
+| 20261005-092219-generation-luna-en-1 | agent | 85.7% | 75.0% | 61.1% | 50.0% | 75.5% | 75.0% | 86.7% |
+| 20261005-094842-generation-luna-en-2 | agent | 84.3% | 85.7% | 66.7% | 55.6% | 76.6% | 82.5% | 93.3% |
 
-### Phân loại lỗi — 20261005-050617-generation-nav-en-2
+### Phân loại lỗi — 20261005-094842-generation-luna-en-2
 
 Bằng chứng có nằm trong các chunk đưa cho LLM không? Hàng thứ nhất mà sai là lỗi **đọc/suy luận** (sửa prompt/mô hình); hàng thứ hai là lỗi **truy xuất** (sửa giai đoạn tìm kiếm).
 
 | | Đúng | Một phần | Sai | Từ chối | Trả về rỗng |
 |---|---|---|---|---|---|
-| Bằng chứng có trong ngữ cảnh | 2 | 0 | 0 | 0 | 0 |
-| Bằng chứng KHÔNG có trong ngữ cảnh | 0 | 0 | 0 | 0 | 0 |
+| Bằng chứng có trong ngữ cảnh | 35 | 15 | 2 | 0 | 0 |
+| Bằng chứng KHÔNG có trong ngữ cảnh | 8 | 4 | 2 | 1 | 0 |
 
 | Split / loại | n | Đúng | Điểm |
 |---|---|---|---|
-| dev | 1 | 100.0% | 100.0% |
-| test | 1 | 100.0% | 100.0% |
-| fact | 1 | 100.0% | 100.0% |
-| relationship | 1 | 100.0% | 100.0% |
+| dev | 47 | 59.6% | 76.6% |
+| test | 20 | 75.0% | 82.5% |
+| fact | 35 | 77.1% | 84.3% |
+| relationship | 14 | 71.4% | 85.7% |
+| multi_hop | 9 | 44.4% | 66.7% |
+| summary | 9 | 22.2% | 55.6% |
 
-- Trung thực (trên 2 câu có trả lời): được hỗ trợ 100.0%, một phần 0.0%, không được hỗ trợ 0.0%, không trích nguồn 0.0%; trích ít nhất một chunk chứa bằng chứng chuẩn 100.0%.
+- Trung thực (trên 66 câu có trả lời): được hỗ trợ 71.2%, một phần 27.3%, không được hỗ trợ 1.5%, không trích nguồn 0.0%; trích ít nhất một chunk chứa bằng chứng chuẩn 65.1%.
 - Câu có đáp án mà LLM trả về rỗng (lỗi phía nhà cung cấp, không phải từ chối): 0.0%.
-- Ngoài phạm vi (0 câu): xử lý đúng –, bịa câu trả lời –; theo loại: .
-- Chi phí trung bình mỗi câu: 17687.5 token vào, 175.5 token ra (giám khảo thêm 2086 token); truy xuất 1081.5 ms, LLM 5246 ms.
-- Cấu hình: `gemini` / `gemini-3.5-flash-lite`, temperature 0.2, tối đa 700 token ra, top 6, chunker `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457).
+- Ngoài phạm vi (15 câu): xử lý đúng 93.3%, bịa câu trả lời 6.7%; theo loại: general 66.7%, not_in_text 100.0%, false_premise 100.0%, beyond_corpus 100.0%.
+- Chi phí trung bình mỗi câu: 18596.8 token vào, 195.1 token ra (giám khảo thêm 1577.5 token); truy xuất 174 ms, LLM 7980.5 ms.
+- Cấu hình: `openai` / `gpt-6-luna`, temperature 0.2, tối đa 700 token ra, top 6, chunker `v1 target=350 max=450 min=120 scene=175 overlap=80` (10457).
 
-### Chi tiết từng câu — 20261005-050617-generation-nav-en-2
+### Chi tiết từng câu — 20261005-094842-generation-luna-en-2
 
 | Câu | Kết quả | Bằng chứng trong ngữ cảnh (hạng) | Trung thực | Câu trả lời | Nhận xét giám khảo |
 |---|---|---|---|---|---|
-| fact-10 | correct | 1, 7 | supported | According to Rem's interlude in Volume 3, Ram lost her horn when their village was attacked by members of the Witch Cult in black robes [12… | The system answer accurately captures all the key points from the reference answer (village attacked, Ram shielding Rem… |
-| rel-10 | correct | 3 | supported | Old Man Rom is viewed by Felt as her only family; he watched over and raised her ever since she was a baby [2, 4]. (Previously, he made a l… | The system answer accurately identifies Old Man Rom as Felt's family/guardian figure who raised her since she was a bab… |
+| fact-01 | correct | 6 | supported | Elsa Granhiert kills Subaru. She slashes his abdomen with a kukri, then uses a second kukri to cut deeply through it, spilling his blood an… | The system answer accurately identifies the killer and the method, and all claims are directly supported by the provide… |
+| fact-02 | correct | không | supported | He calls it **Return by Death**. [1] | The system correctly identifies the name of the power, and the cited passage confirms that Subaru refers to it as 'Retu… |
+| fact-03 | incorrect | không | supported | She tells him, “Emilia. Just Emilia.” [1] | The system answer is factually incorrect regarding the events of Volume 1, as the girl gives the name 'Satella' when fi… |
+| fact-04 | correct | 1 | supported | She tells him her name is **Emilia**—“Just Emilia.” [1] | The system answer correctly identifies the name Emilia and is fully supported by the provided text. |
+| fact-05 | correct | 5, 6 | supported | Subaru is stabbed in the back by Dumber as he tries to push past the thugs and leave the alley. The knife damages his guts; the thugs turn … | The system answer accurately identifies the cause of death and the perpetrator, and all details provided are directly s… |
+| fact-06 | correct | không | supported | Subaru had a wallet, a cell phone, corn-soup chips, and cup ramen with him. He was wearing a tracksuit and sneakers. [1] | The system answer correctly identifies the items Subaru had with him and is fully supported by the provided text. |
+| fact-07 | correct | 4 | partially_supported | Reinhard identifies Elsa as **“the Bowel Hunter.”** [1] | While the system answer correctly identifies the nickname, the cited passage shows Elsa referring to herself as the 'Bo… |
+| fact-08 | correct | 6, 7, 8, 9 | supported | Rem uses a **morning star**—a spiked iron ball attached to a long chain. [6][8] | The system answer accurately identifies the weapon as a morning star and describes it as a spiked iron ball on a chain,… |
+| fact-09 | correct | 9 | supported | Subaru concludes that the curse came from the demon beast puppy that bit him in the village—not from a human shaman. The puppy’s bite sprea… | The system answer correctly identifies the puppy as the source of the curse and is fully supported by the provided text… |
+| fact-10 | partial | 1, 4 | partially_supported | Ram lost her horn when an attacker struck her head with a blade. She had turned to shield Rem and took the blow instead, severing her horn.… | The system answer correctly identifies that Ram shielded Rem and had her horn severed, but it fails to mention the vill… |
+| fact-11 | correct | 6 | supported | Crusch Karsten’s blessing is called the **Divine Protection of Wind Reading** (also rendered in the text as the “blessing of wind reading”)… | The system correctly identifies the blessing as the Divine Protection of Wind Reading, which is directly supported by t… |
+| fact-12 | correct | 1, 3 | supported | He first apologizes for not having introduced himself, then bows and says, “I am Petelgeuse Romanée-Conti—” He twists his head toward Subar… | The system answer accurately captures the required key points and is fully supported by the provided text from Volume 5. |
+| fact-13 | incorrect | 2 | supported | Rem sadly refuses: “I cannot run away with you, Subaru.” She says that if they fled, she’d be leaving behind the Subaru she loves most. [2]… | The system answer fails to address the second half of the question regarding what Subaru tells Rem after her refusal, a… |
+| fact-14 | correct | 2 | supported | Subaru offers the Emilia camp’s magic-crystal mining rights in the Great Elior Forest, along with information about when and where the Whit… | The system answer accurately identifies both key points required by the reference answer and is fully supported by the … |
+| fact-15 | partial | 13 | partially_supported | Wilhelm delivers the final blow. The White Whale is first pinned beneath the Great Tree, which crashes down onto it; though the impact does… | The system answer is missing the key point that the whale was cut in two, as the cited passage only describes Wilhelm s… |
+| fact-16 | partial | 1 | partially_supported | After Petelgeuse abandons possession of Subaru and returns to his own body, Julius impales him with his sword, leaving him bleeding and una… | The system answer correctly identifies the sword strike and the rockslide, but it fails to include the key point that P… |
+| fact-17 | correct | 1, 2 | supported | Otto’s blessing of language lets him understand the voices of living creatures. He can communicate with them and enlist their help—for exam… | The system answer accurately identifies the blessing of language and its function of communicating with living creature… |
+| fact-18 | correct | không | supported | Garfiel has the **blessing of the earth spirit**. It enhances his healing and lets him manipulate the ground within the reach of his limbs.… | The system correctly identifies the blessing and its effects, and all claims are directly supported by the provided tex… |
+| fact-19 | partial | 3 | partially_supported | The barrier affects people with sufficiently mixed human and demi-human blood—those whose mixed blood is “thick” enough. It holds them capt… | The system answer correctly identifies who is affected and the effect of being held captive, but it fails to mention th… |
+| fact-20 | partial | không | supported | The three Trials are: 1. **Face your past.** [6] 2. **Behold the unknowable present**—a Trial that makes someone’s spoken lies come true. [… | The system correctly identifies the first two trials but fails to identify the third trial, claiming the passages do no… |
+| fact-21 | correct | 12 | supported | Garfiel ultimately kills Elsa by hurling the massive Rock Pig at her. She watches it coming and does not try to escape; the impact smashes … | The system answer accurately identifies Garfiel as the killer and the method of the Rock Pig, and all details provided … |
+| fact-22 | correct | 2 | supported | Echidna says the Great Rabbit is a demon beast—one of the three great demon beasts and a “negative legacy” left by Daphne, the Witch of Glu… | The system answer accurately identifies the Great Rabbit as one of the three great demon beasts, a horde, and a negativ… |
+| fact-23 | correct | 4 | supported | After Reinhard’s attack sent Regulus through the pavement and underground, water from the canal he had destroyed poured into the narrow tun… | The system answer accurately identifies the key points of Regulus's death and is fully supported by the provided text p… |
+| fact-24 | correct | 7, 10 | supported | The Archbishop is **Sirius Romanée-Conti**, charged with **Wrath**. [7] | The system answer correctly identifies the name and sin as requested, and both facts are explicitly stated in the provi… |
+| fact-25 | correct | 2, 3 | supported | She introduces herself as **Capella Emerada Lugunica**. [1] | The system correctly identified the name provided in the text and the citation directly supports the claim. |
+| fact-26 | correct | không | supported | The two Archbishops were **Lye Batenkaitos of Gluttony** and **Regulus Corneas of Greed**. [3] | The system correctly identified both Archbishops and their respective sins, and all information provided is directly su… |
+| fact-27 | correct | 1 | supported | He fights with chopsticks—one in each hand—rather than a sword. [8] | The system answer correctly identifies that Reid uses chopsticks and is supported by the provided text. |
+| fact-28 | incorrect | không | supported | The last thing Subaru remembers is heading back to the room after checking whether he had any special ability. He recalls concluding that h… | The system answer is factually incorrect because it describes Subaru's immediate confusion upon waking up in the Watcht… |
+| fact-29 | correct | 5, 9 | partially_supported | Rem wakes up with amnesia: she doesn’t recognize Subaru and doesn’t even know who she is. Her legs are also too weak for her to stand, appa… | The system correctly identifies Rem's amnesia and wariness. However, the claim regarding the cause of her leg weakness … |
+| fact-30 | correct | 2 | supported | Abel reveals that he is Vincent Abelks, the seventy-seventh emperor of the Holy Volakian Empire, though he has been removed from the throne… | The system answer accurately identifies Abel as the 77th emperor of Volakia and notes his removal from the throne, both… |
+| fact-31 | correct | 7 | supported | Natsumi Schwartz is Subaru’s female disguise. In Volume 27, he adopts it so he can pass through Guaral’s gates without being recognized, th… | The system answer accurately identifies the persona and the reason for its creation while remaining fully supported by … |
+| fact-32 | correct | 1, 5 | supported | Regulus Corneas represents **Greed** as an Archbishop of the Witch Cult. [1] | The system answer correctly identifies Regulus Corneas as the Archbishop of Greed, which is explicitly stated in the pr… |
+| fact-33 | correct | 5, 10 | supported | Subaru and Julius agree to a mock duel after Subaru insults Julius and refuses to apologize. Subaru tries to gain an advantage with a trick… | The system answer accurately captures all key points and is fully supported by the provided text passages. |
+| fact-34 | correct | 7 | supported | Julius was badly injured in the fight, but Ricardo’s spirit healed him. [11] Afterward, Gluttony had eaten Julius’s name: Julius still reme… | The system answer accurately covers all key points and is fully supported by the provided citations. |
+| fact-35 | correct | 3, 16 | supported | Subaru’s personal reason for making the dangerous journey is to bring Rem back; he vows to help her while she is still sleeping. [16] The g… | The system correctly identifies the motivations for the journey and the method for crossing the dunes, with all claims … |
+| rel-01 | correct | 3 | supported | Ram and Rem are twin sisters. Ram is the older twin; Rem is the younger. [3] | The system answer correctly identifies the twins and their birth order, and all claims are directly supported by the pr… |
+| rel-02 | partial | 2 | supported | Wilhelm’s wife was Theresia van Astrea. Before marrying into the Astrea family, his surname was Trias. [2] | The system answer is faithful to the provided passage, but it failed to include the key point that Theresia was the pre… |
+| rel-03 | correct | 16 | supported | Reinhard is Wilhelm and Theresia’s grandson: they had a son, Heinkel, who married Louanna, and Reinhard is their son. [16] | The system answer accurately identifies the familial relationships and parents as requested, and all information is dir… |
+| rel-04 | partial | không | supported | Frederica is Garfiel’s older sister; Garfiel is her younger brother. [1] | The system answer correctly identifies the sibling relationship but fails to mention that they do not get along, which … |
+| rel-05 | partial | 4 | partially_supported | Beatrice is Echidna’s daughter—Echidna calls her “Mother” and Beatrice “Betty.” [5] Echidna left her to guard the archive of forbidden book… | The system answer correctly identifies the relationship and the task, but it fails to mention the 'four hundred years' … |
+| rel-06 | correct | 1, 2 | partially_supported | The knights associated with each royal candidate are: - **Crusch Karsten** — Felix Argyle, the Blue Knight. - **Priscilla Bariel** — Al. - … | The system answer is factually correct regarding the candidates and their knights, but the claim regarding Emilia and S… |
+| rel-07 | partial | 2, 3 | partially_supported | Joshua is Julius’s younger brother [1]. Julius does not remember him because Gluttony’s power ate Julius’s name, causing others to forget h… | The system incorrectly states that Julius's name was eaten; the passages indicate that Joshua's name was eaten, causing… |
+| rel-08 | correct | 3 | supported | Fortuna is Emilia’s aunt—the younger sister of Emilia’s father—and the woman who raised her as a surrogate mother. Emilia regarded her as h… | The system correctly identifies Fortuna as Emilia's aunt and surrogate mother while acknowledging Emilia viewed her as … |
+| rel-09 | correct | không | supported | Subaru’s father is **Kenichi Natsuki**, and his mother is **Nahoko Natsuki**. [13][15] | The system correctly identified both parents' names, and both names are explicitly mentioned in the provided passages. |
+| rel-10 | correct | 3 | supported | Old Man Rom is Felt’s surrogate father and the family she trusts wholeheartedly. [6] They’re living at the Astrea family mansion. [3][7] | The system correctly identified Rom as Felt's surrogate father/family and confirmed they are living at the Astrea famil… |
+| rel-11 | correct | 7, 8 | supported | Beatrice forms a contract with **Subaru Natsuki**. He persuades her by asking her to choose him: he can’t promise to be with her for four h… | The system answer correctly identifies Subaru, the specific phrase used, and the outcome of the contract, all of which … |
+| rel-12 | correct | không | supported | Ram is deeply devoted to Roswaal: she says she serves him loyally without asking anything in return and declares, “I am yours, Master Roswa… | The system answer accurately captures Ram's adoration and devotion to Roswaal as described in the reference and support… |
+| rel-13 | correct | 9 | supported | Shaula is the Pleiades Watchtower’s guardian, who has waited there for centuries. She says her master is the Sage Flugel and believes Subar… | The system answer accurately identifies Shaula's role and her belief regarding Subaru's identity, with all claims being… |
+| rel-14 | correct | không | unsupported | Emilia’s contracted spirit is Puck, the Great Spirit. [1] | While the answer is factually correct according to the series, the provided passage mentions Puck and Emilia (Lia) but … |
+| multi-01 | partial | 9 | partially_supported | 1. **First death:** In the loot cellar, where Elsa kills Subaru by slashing open his abdomen. [2][11] 2. **Second death:** Also in the loot… | The system correctly identifies the locations and culprits for the first two deaths, but it fails to accurately describ… |
+| multi-02 | correct | không | supported | In the Mathers domain, the sin involved was **Sloth**: Subaru faces Petelgeuse, the Archbishop entrusted with Sloth. [12][13] In Pristella,… | The system correctly identifies the Archbishops involved in both arcs and provides support for its claims using the pro… |
+| multi-03 | incorrect | 11 | partially_supported | In Volume 1, Felt first saves Subaru by tackling him out of Elsa’s attack, but Elsa then cuts Felt down. [3][1] Reinhard arrives and stops … | The system incorrectly identifies the volume and method of Elsa's death, contradicting the reference answer and the act… |
+| multi-04 | partial | 7, 8, 16, 17 | partially_supported | Theresia originally disappeared during the White Whale expedition: after the battle turned chaotic in the fog, she realized she had lost th… | The system failed to mention that she was killed by the White Whale, and the cited passages do not contain the informat… |
+| multi-05 | partial | 6, 9 | partially_supported | Rem survived the White Whale battle and returned with the expeditionary force. Later, on the journey back, she and Crusch were attacked by … | The system answer is partially correct but misses the key detail that her name and memories were eaten. It is only part… |
+| multi-06 | correct | 2, 6, 10 | supported | Gluttony affected each differently: - **Crusch:** her **own memories** were eaten; she could no longer remember her past or the people she … | The system accurately identifies the differences in how Gluttony affected Crusch, Rem, and Julius, and all claims are d… |
+| multi-07 | correct | 6, 8, 9, 13, 15, 22 | supported | Subaru meets these six Witches at the Sanctuary tea parties: - **Echidna** — Greed [3][22] - **Typhon** — Pride [6] - **Minerva** — Wrath [… | The system correctly identifies all six Witches and their respective sins, and every claim is directly supported by the… |
+| multi-08 | correct | 39 | supported | After the battle, **Regulus (Greed) was killed**: he drowned underground after being buried by his own ability’s counterattack [23][39]. **… | The system correctly identifies the status of the Archbishops based on the provided text and accurately notes that the … |
+| multi-09 | partial | 17, 18, 20 | partially_supported | In Volume 4, Subaru and Julius are openly hostile: Julius looks down on Subaru and rejects him as a knight, while Subaru insults Julius and… | The system answer correctly identifies the relationship shift after Pristella, but it fails to include the required key… |
+| sum-01 | correct | 17, 26, 28, 31 | supported | Subaru Natsuki is suddenly transported from modern Japan to a fantasy world, where he meets a silver-haired girl searching for her stolen b… | The system answer covers all required key points accurately and all claims are directly supported by the provided text … |
+| sum-02 | partial | không | partially_supported | At Roswaal Manor, Subaru’s peaceful first week ends when he suddenly returns to its first day. He suspects his deaths in earlier loops were… | The system answer misses the specific detail that Rem kills Subaru with her morning star, which is a required key point… |
+| sum-03 | partial | không | supported | In Volume 7, Subaru’s warning lets Crusch’s force prepare for the White Whale’s appearance. When it emerges, Rem strikes first with powerfu… | The system answer fails to mention the alliance with Crusch, the mining rights, the Great Flugel Tree, or the fact that… |
+| sum-04 | refused | không |  | Not found in the provided passages. |  |
+| sum-05 | partial | 4, 18 | supported | The Witch Cult seized Pristella’s city hall and all four water-control towers, giving them the power to open the floodgates and drown the c… | The system answer fails to mention the deaths or captures of the Archbishops (Regulus, Sirius) and the reanimation of T… |
+| sum-06 | partial | 8 | partially_supported | After the costly battle in Pristella, Subaru’s group set out east to seek the Sage in the Auguria Dunes, hoping to find a way to restore wh… | The system answer misses several key points required by the prompt (memory loss, Reid's chopsticks) and includes a clai… |
+| sum-07 | partial | 1, 2, 3, 5, 6, 7, 10 | partially_supported | Wilhelm, a young soldier devoted entirely to swordsmanship, repeatedly met Theresia in a flower garden. Their conversations gradually grew … | The system answer claims Wilhelm defeated Theresia and took her sword, which contradicts the cited passages where she d… |
+| sum-08 | correct | 1, 2, 3, 4, 5 | supported | Rem and her twin sister Ram were born into the oni tribe at a time when twins were considered ill-omened and were supposed to be killed. Th… | The system answer accurately covers all required key points and is fully supported by the provided text passages. |
+| sum-09 | partial | 4 | partially_supported | After the events at the Pleiades Watchtower, Subaru, Rem, and Louis are whisked away to a meadow far from Auguria. Rem has lost her memorie… | The system answer is missing the key point about Subaru disguising himself as Natsumi Schwartz; while it mentions he be… |
+| oos-01 | refused | – |  | Not found in the provided passages. |  |
+| oos-02 | refused | – |  | Not found in the provided passages. |  |
+| oos-03 | answered | – |  | O(n²) | The system provided an answer based on outside knowledge regarding computer science rather than declining the question … |
+| oos-04 | refused | – |  | Not found in the provided passages. |  |
+| oos-05 | refused | – |  | Not found in the provided passages. |  |
+| oos-06 | refused | – |  | Not found in the provided passages. |  |
+| oos-07 | corrected_premise | – |  | Emilia did not become an Archbishop of the Witch Cult. The passages show her being mistaken for Satella, the Witch of Jealousy, by the Holy… | The system correctly identifies that the premise of the question is false and clarifies Emilia's actual status. |
+| oos-08 | corrected_premise | – |  | Rem didn’t cut off Ram’s horn deliberately. During the attack, Ram shielded Rem and was struck by a weapon that severed her horn. Rem’s fir… | The system correctly identifies that Rem did not cut off the horn and explains the actual circumstances of the event. |
+| oos-09 | refused | – |  | Not found in the provided passages. |  |
+| oos-10 | corrected_premise | – |  | Subaru defeated Petelgeuse Romanée-Conti, the Archbishop of Sloth—not an Archbishop of Pride. [7] | The system correctly identified that the premise of the question was false by clarifying that the Archbishop of Sloth w… |
+| oos-11 | corrected_premise | – |  | Volume 1 doesn’t say that Puck formed a contract with Subaru. It describes Puck as Emilia’s spirit and shows him helping her and Subaru dur… | The system correctly identifies that the premise of the question is false by clarifying that Puck is Emilia's spirit an… |
+| oos-12 | refused | – |  | Not found in the provided passages. |  |
+| oos-13 | corrected_premise | – |  | The royal selection has not yet produced a winner in the passages provided. Emilia and the other candidates are still competing for the thr… | The system correctly identifies that the royal selection is ongoing and has not yet concluded, effectively addressing t… |
+| oos-14 | refused | – |  | Not found in the provided passages. |  |
+| oos-15 | refused | – |  | Not found in the provided passages. |  |
 
 ## Bộ câu hỏi khác
 
@@ -225,3 +311,6 @@ Các lần chạy trên một file câu hỏi khác cùng id (vd. bản tiếng 
 | 20261005-030534-generation-lang-vi-glossary | generation | `data/eval/golden_set_vi.json` | lang-vi-glossary | agent | 83.6% | 74.6% | 3.0% | 100.0% |
 | 20261005-050538-generation-nav-vi-1 | generation | `data/eval/golden_set_vi.json` | nav-vi-1 | agent | 100.0% | 100.0% | 0.0% | – |
 | 20261005-050701-generation-nav-vi-2 | generation | `data/eval/golden_set_vi.json` | nav-vi-2 | agent | 100.0% | 100.0% | 0.0% | – |
+| 20261005-082639-generation-luna-smoke-vi | generation | `data/eval/golden_set_vi.json` | luna-smoke-vi | agent | 62.5% | 50.0% | 0.0% | 0.0% |
+| 20261005-082826-generation-luna-vi-1 | generation | `data/eval/golden_set_vi.json` | luna-vi-1 | agent | 79.1% | 68.7% | 0.0% | 86.7% |
+| 20261005-085430-generation-luna-vi-2 | generation | `data/eval/golden_set_vi.json` | luna-vi-2 | agent | 80.6% | 68.7% | 0.0% | 93.3% |
