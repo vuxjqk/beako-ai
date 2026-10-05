@@ -96,7 +96,8 @@ def _chunk_texts(db: Session, ids: list[int]) -> dict[int, str]:
 
 
 def _judge(prompt: str, model: str) -> tuple[dict, dict]:
-    c = llm.chat(JUDGE_SYSTEM, prompt, model=model, max_tokens=JUDGE_MAX_TOKENS, temperature=0.0)
+    c = llm.chat(JUDGE_SYSTEM, prompt, model=model, max_tokens=JUDGE_MAX_TOKENS, temperature=0.0,
+                 endpoint=llm.judge_endpoint())
     return _parse_json(c.text), c.usage
 
 
@@ -235,13 +236,15 @@ def run(db: Session, label: str | None, judge_model: str | None, pause: float, c
         golden_path: Path = golden.GOLDEN_PATH) -> dict:
     if not config.LLM_API_KEY:
         raise llm.LLMNotConfigured("LLM_API_KEY is not set")
+    if not config.JUDGE_API_KEY:
+        raise llm.LLMNotConfigured("JUDGE_API_KEY is not set")
     if resume:  # a resumed run keeps its question file and its --only selection
         header = json.loads((resume / "header.json").read_text(encoding="utf-8"))
         golden_path = Path(header["golden_set"].get("path", golden.GOLDEN_PATH))
         only = set(header.get("only") or []) or only
     questions, sha = golden.load(golden_path)
     targets = [q for q in questions if not only or q.id in only]
-    judge_model = judge_model or config.LLM_MODEL
+    judge_model = judge_model or config.JUDGE_MODEL
     get_embedder()
     if resume:
         run_dir = resume

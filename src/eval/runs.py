@@ -74,6 +74,7 @@ def generation_config(judge_model: str, mode: str) -> dict:
         "reasoning_effort": config.LLM_REASONING_EFFORT or None,
         "system_prompt_sha256": hashlib.sha256(qa.SYSTEM_PROMPT.encode()).hexdigest()[:12],
         "system_prompt": qa.SYSTEM_PROMPT,
+        "judge_provider": config.JUDGE_PROVIDER,
         "judge_model": judge_model,
     }
 

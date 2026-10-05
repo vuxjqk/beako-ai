@@ -49,6 +49,15 @@ LLM_MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "700"))
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 # Empty = don't send; "none"/"low" keeps thinking models from eating the output budget
 LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT", "")
+# Answer judge of the evaluation (python -m src.eval generation); each JUDGE_* left empty falls
+# back to its LLM_* setting. LLM_BASE_URL and LLM_REASONING_EFFORT are provider-specific, so they
+# only carry over when the judge uses the same provider
+JUDGE_PROVIDER = (os.getenv("JUDGE_PROVIDER") or LLM_PROVIDER).lower()
+JUDGE_MODEL = os.getenv("JUDGE_MODEL") or LLM_MODEL
+JUDGE_API_KEY = os.getenv("JUDGE_API_KEY") or LLM_API_KEY
+_judge_same_provider = JUDGE_PROVIDER == LLM_PROVIDER
+JUDGE_BASE_URL = os.getenv("JUDGE_BASE_URL") or (LLM_BASE_URL if _judge_same_provider else "")
+JUDGE_REASONING_EFFORT = os.getenv("JUDGE_REASONING_EFFORT") or (LLM_REASONING_EFFORT if _judge_same_provider else "")
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 # Longest provider-requested back-off (429/503) a request will sit through before failing
 LLM_MAX_RETRY_WAIT_SECONDS = float(os.getenv("LLM_MAX_RETRY_WAIT_SECONDS", "20"))

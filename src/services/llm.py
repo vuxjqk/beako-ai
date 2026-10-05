@@ -1,7 +1,8 @@
 """Minimal chat client for any OpenAI-compatible Chat Completions API.
 
 Gemini and OpenAI both speak this protocol, so switching provider is only a matter of
-.env settings (LLM_PROVIDER / LLM_MODEL / LLM_API_KEY, optionally LLM_BASE_URL).
+.env settings (LLM_PROVIDER / LLM_MODEL / LLM_API_KEY, optionally LLM_BASE_URL). The evaluation
+judge has its own JUDGE_* settings (see config), so it can sit on another provider.
 """
 
 import json
@@ -110,10 +111,29 @@ class Completion:
     usage: dict
 
 
-def _base_url() -> str:
-    base = config.LLM_BASE_URL or DEFAULT_BASE_URLS.get(config.LLM_PROVIDER)
+@dataclass(frozen=True)
+class Endpoint:
+    """Where a request goes; prefix names the settings, for error messages."""
+    prefix: str
+    provider: str
+    base_url: str
+    api_key: str
+    reasoning_effort: str
+
+
+def _app_endpoint() -> Endpoint:
+    return Endpoint("LLM", config.LLM_PROVIDER, config.LLM_BASE_URL, config.LLM_API_KEY, config.LLM_REASONING_EFFORT)
+
+
+def judge_endpoint() -> Endpoint:
+    return Endpoint("JUDGE", config.JUDGE_PROVIDER, config.JUDGE_BASE_URL, config.JUDGE_API_KEY,
+                    config.JUDGE_REASONING_EFFORT)
+
+
+def _base_url(ep: Endpoint) -> str:
+    base = ep.base_url or DEFAULT_BASE_URLS.get(ep.provider)
     if not base:
-        raise LLMNotConfigured(f"Unknown LLM_PROVIDER {config.LLM_PROVIDER!r}; set LLM_BASE_URL")
+        raise LLMNotConfigured(f"Unknown {ep.prefix}_PROVIDER {ep.provider!r}; set {ep.prefix}_BASE_URL")
     return base.rstrip("/") + "/"
 
 
@@ -137,16 +157,20 @@ class ToolTurn:
     usage: dict
 
 
-def _post(body: dict) -> dict:
-    if not config.LLM_API_KEY:
-        raise LLMNotConfigured("LLM_API_KEY is not set")
+def _post(body: dict, ep: Endpoint | None = None) -> dict:
+    ep = ep or _app_endpoint()
+    if not ep.api_key:
+        raise LLMNotConfigured(f"{ep.prefix}_API_KEY is not set")
     # Thinking models (e.g. Gemini 2.5) otherwise spend the output budget on reasoning
-    if config.LLM_REASONING_EFFORT:
-        body["reasoning_effort"] = config.LLM_REASONING_EFFORT
+    if ep.reasoning_effort:
+        body["reasoning_effort"] = ep.reasoning_effort
+    # Newer OpenAI models reject max_tokens; max_completion_tokens is the same limit
+    if ep.provider == "openai" and "max_tokens" in body:
+        body["max_completion_tokens"] = body.pop("max_tokens")
     req = urllib.request.Request(
-        _base_url() + "chat/completions",
+        _base_url(ep) + "chat/completions",
         data=json.dumps(body).encode(),
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {config.LLM_API_KEY}"},
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {ep.api_key}"},
         method="POST",
     )
     meter = _meter.get()
@@ -186,8 +210,9 @@ def _post(body: dict) -> dict:
 
 
 def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | None = None,
-         temperature: float | None = None) -> Completion:
-    """One chat completion; the keyword overrides let the evaluation judge use other settings."""
+         temperature: float | None = None, endpoint: Endpoint | None = None) -> Completion:
+    """One chat completion; the keyword overrides let the evaluation judge use other settings
+    (endpoint=judge_endpoint() sends it to the JUDGE_* provider)."""
     body = {
         "model": model or config.LLM_MODEL,
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
@@ -195,7 +220,7 @@ def chat(system: str, user: str, *, model: str | None = None, max_tokens: int | 
         "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
     }
     for attempt in range(EMPTY_RETRIES + 1):
-        data = _post(body)
+        data = _post(body, endpoint)
         choice = (data.get("choices") or [{}])[0]
         text = ((choice.get("message") or {}).get("content") or "").strip()
         if text:

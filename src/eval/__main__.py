@@ -68,7 +68,7 @@ def main() -> None:
     p.add_argument("--golden", type=Path, default=golden.GOLDEN_PATH, help="question file")
     p = sub.add_parser("generation")
     p.add_argument("--label")
-    p.add_argument("--judge-model", help="default: LLM_MODEL")
+    p.add_argument("--judge-model", help="default: JUDGE_MODEL (falls back to LLM_MODEL)")
     p.add_argument("--pause", type=float, default=4.0, help="seconds between LLM calls (free-tier rate limits)")
     p.add_argument("--resume", type=Path, help="run directory to continue")
     p.add_argument("--mode", choices=["simple", "agent", "auto"], help="QA path (default: QA_MODE)")
